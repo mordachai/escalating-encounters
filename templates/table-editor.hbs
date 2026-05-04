@@ -92,21 +92,47 @@
             <div class="ee-field-row">
               <div class="ee-field">
                 <label>{{localize "EE.TableEditor.ActorUuid"}}</label>
-                <input type="text"
-                       name="actorUuid"
-                       class="ee-uuid-input"
-                       data-uuid-type="Actor"
-                       value="{{this.actorUuid}}"
-                       placeholder="Drag an Actor here" />
+                {{#if this.actorLink}}
+                <div class="ee-doc-link-display"
+                     data-uuid-type="Actor"
+                     data-field="actorUuid"
+                     data-table-id="{{this.tableId}}"
+                     data-slot-id="{{this.id}}">
+                  {{{this.actorLink}}}
+                  <button type="button" class="ee-btn-icon ee-clear-uuid"
+                          data-action="clear-uuid" data-field="actorUuid"
+                          data-table-id="{{this.tableId}}" data-slot-id="{{this.id}}"
+                          title="Clear">×</button>
+                  <input type="hidden" name="actorUuid" value="{{this.actorUuid}}" />
+                </div>
+                {{else}}
+                <input type="text" name="actorUuid" class="ee-uuid-input"
+                       data-uuid-type="Actor" data-field="actorUuid"
+                       data-table-id="{{this.tableId}}" data-slot-id="{{this.id}}"
+                       value="" placeholder="Drag an Actor here" />
+                {{/if}}
               </div>
               <div class="ee-field">
                 <label>{{localize "EE.TableEditor.JournalUuid"}}</label>
-                <input type="text"
-                       name="journalUuid"
-                       class="ee-uuid-input"
-                       data-uuid-type="JournalEntry"
-                       value="{{this.journalUuid}}"
-                       placeholder="Drag a Journal Entry here" />
+                {{#if this.journalLink}}
+                <div class="ee-doc-link-display"
+                     data-uuid-type="JournalEntry"
+                     data-field="journalUuid"
+                     data-table-id="{{this.tableId}}"
+                     data-slot-id="{{this.id}}">
+                  {{{this.journalLink}}}
+                  <button type="button" class="ee-btn-icon ee-clear-uuid"
+                          data-action="clear-uuid" data-field="journalUuid"
+                          data-table-id="{{this.tableId}}" data-slot-id="{{this.id}}"
+                          title="Clear">×</button>
+                  <input type="hidden" name="journalUuid" value="{{this.journalUuid}}" />
+                </div>
+                {{else}}
+                <input type="text" name="journalUuid" class="ee-uuid-input"
+                       data-uuid-type="JournalEntry" data-field="journalUuid"
+                       data-table-id="{{this.tableId}}" data-slot-id="{{this.id}}"
+                       value="" placeholder="Drag a Journal Entry here" />
+                {{/if}}
               </div>
             </div>
 
@@ -129,12 +155,28 @@
                             rows="2"
                             placeholder="{{localize 'EE.TableEditor.OutcomeText'}}">{{this.text}}</textarea>
                   <div class="ee-outcome-sound-row">
-                    <input type="text"
-                           name="soundUuid"
-                           class="ee-uuid-input"
-                           data-uuid-type="PlaylistSound"
-                           value="{{this.soundUuid}}"
-                           placeholder="Drag a Sound here" />
+                    {{#if this.soundLink}}
+                    <div class="ee-doc-link-display"
+                         data-uuid-type="PlaylistSound"
+                         data-field="soundUuid"
+                         data-table-id="{{this.tableId}}"
+                         data-slot-id="{{this.slotId}}"
+                         data-outcome-id="{{this.id}}">
+                      {{{this.soundLink}}}
+                      <button type="button" class="ee-btn-icon ee-clear-uuid"
+                              data-action="clear-uuid" data-field="soundUuid"
+                              data-table-id="{{this.tableId}}" data-slot-id="{{this.slotId}}"
+                              data-outcome-id="{{this.id}}"
+                              title="Clear">×</button>
+                      <input type="hidden" name="soundUuid" value="{{this.soundUuid}}" />
+                    </div>
+                    {{else}}
+                    <input type="text" name="soundUuid" class="ee-uuid-input"
+                           data-uuid-type="PlaylistSound" data-field="soundUuid"
+                           data-table-id="{{this.tableId}}" data-slot-id="{{this.slotId}}"
+                           data-outcome-id="{{this.id}}"
+                           value="" placeholder="Drag a Sound here" />
+                    {{/if}}
                     <button type="button"
                             class="ee-btn-sm"
                             data-action="preview-sound"

@@ -1,0 +1,85 @@
+name: Release Module
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'module.json'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if version changed
+        id: check_version
+        run: |
+          CURRENT_VERSION=$(jq -r '.version' module.json)
+          PREVIOUS_VERSION=$(git show HEAD~1:module.json | jq -r '.version')
+
+          echo "Current version: $CURRENT_VERSION"
+          echo "Previous version: $PREVIOUS_VERSION"
+
+          if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "VERSION=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+            echo "Version changed from $PREVIOUS_VERSION to $CURRENT_VERSION"
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "Version unchanged, skipping release"
+          fi
+
+      - name: Check if tag exists
+        if: steps.check_version.outputs.changed == 'true'
+        id: check_tag
+        run: |
+          if git rev-parse "v${{ steps.check_version.outputs.VERSION }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Tag v${{ steps.check_version.outputs.VERSION }} already exists, skipping release"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create module package
+        if: steps.check_version.outputs.changed == 'true' && steps.check_tag.outputs.exists == 'false'
+        run: |
+          mkdir -p escalating-encounters
+
+          cp module.json escalating-encounters/
+          cp -r styles escalating-encounters/
+          cp -r scripts escalating-encounters/
+          cp -r lang escalating-encounters/
+          cp -r templates escalating-encounters/
+
+          cd escalating-encounters
+          zip -r ../module.zip .
+          cd ..
+
+      - name: Create Release
+        if: steps.check_version.outputs.changed == 'true' && steps.check_tag.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.check_version.outputs.VERSION }}
+          name: Release v${{ steps.check_version.outputs.VERSION }}
+          files: |
+            module.json
+            module.zip
+          body: |
+            ## The Count, The Castle & The Curse v${{ steps.check_version.outputs.VERSION }}
+
+            ### Installation
+            Paste this manifest URL in Foundry VTT → Add-on Modules → Install Module:
+            ```
+            https://github.com/${{ github.repository }}/releases/latest/download/module.json
+            ```
+            Or download `module.zip` and extract to `Data/modules/`.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

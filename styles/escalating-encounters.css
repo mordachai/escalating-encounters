@@ -484,6 +484,39 @@
 .ee-uuid-input {
   font-size: 0.8em;
 }
+
+/* ── UUID document link display pill ── */
+.ee-doc-link-display {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  background: var(--input-background-color);
+  border: 1px solid var(--input-border-color);
+  border-radius: var(--ee-radius);
+  min-height: 26px;
+  overflow: hidden;
+}
+.ee-doc-link-display .content-link {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85em;
+}
+.ee-doc-link-display:hover {
+  border-color: var(--color-warm-1);
+}
+.ee-clear-uuid {
+  flex-shrink: 0;
+  opacity: 0.5;
+  font-size: 1em;
+  line-height: 1;
+}
+.ee-clear-uuid:hover {
+  opacity: 1;
+  color: var(--color-level-error, #c22b2b);
+}
 .ee-uuid-input:focus,
 .ee-uuid-input.dragover {
   outline: 2px solid var(--color-warm-1);

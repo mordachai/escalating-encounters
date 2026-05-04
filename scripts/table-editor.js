@@ -44,25 +44,40 @@
       let selected = null;
       if (this._selectedId && this._tables[this._selectedId]) {
         const t = this._tables[this._selectedId];
+        const TE = foundry.applications?.ux?.TextEditor?.implementation ?? globalThis.TextEditor;
         selected = {
           id: t.id,
           name: t.name,
-          slots: (t.slots ?? []).map((slot, si) => ({
-            id: slot.id,
-            label: slot.label,
-            actorUuid: slot.actorUuid ?? '',
-            journalUuid: slot.journalUuid ?? '',
-            tableId: t.id,
-            num: si + 1,
-            isOpen: this._openSlots.has(slot.id),
-            outcomes: (slot.outcomes ?? []).map((o, oi) => ({
-              id: o.id,
-              text: o.text ?? '',
-              soundUuid: o.soundUuid ?? '',
-              num: oi + 1,
+          slots: await Promise.all((t.slots ?? []).map(async (slot, si) => {
+            const [actorLink, journalLink] = await Promise.all([
+              slot.actorUuid ? TE.enrichHTML(`@UUID[${slot.actorUuid}]`) : Promise.resolve(null),
+              slot.journalUuid ? TE.enrichHTML(`@UUID[${slot.journalUuid}]`) : Promise.resolve(null)
+            ]);
+            return {
+              id: slot.id,
+              label: slot.label,
+              actorUuid: slot.actorUuid ?? '',
+              journalUuid: slot.journalUuid ?? '',
+              actorLink,
+              journalLink,
               tableId: t.id,
-              slotId: slot.id
-            }))
+              num: si + 1,
+              isOpen: this._openSlots.has(slot.id),
+              outcomes: await Promise.all((slot.outcomes ?? []).map(async (o, oi) => {
+                const soundLink = o.soundUuid
+                  ? await TE.enrichHTML(`@UUID[${o.soundUuid}]`)
+                  : null;
+                return {
+                  id: o.id,
+                  text: o.text ?? '',
+                  soundUuid: o.soundUuid ?? '',
+                  soundLink,
+                  num: oi + 1,
+                  tableId: t.id,
+                  slotId: slot.id
+                };
+              }))
+            };
           }))
         };
       }
@@ -84,18 +99,26 @@
     }
 
     _onDrop(event) {
-      // UUID input fields (actor, journal, sound slots)
-      const input = event.target.closest('[data-uuid-type]');
-      if (input) {
+      // UUID drop target: display pill (filled) or text input (empty) — both carry data-uuid-type + data-field
+      const uuidTarget = event.target.closest('[data-uuid-type][data-field]');
+      if (uuidTarget) {
         event.preventDefault();
         const data = TextEditor.implementation.getDragEventData(event);
         if (!data?.uuid) return;
-        const expected = input.dataset.uuidType;
-        if (expected && data.type !== expected) {
-          ui.notifications.warn(game.i18n.format('EE.TableEditor.WrongType', { expected }));
+        const { uuidType, field, tableId, slotId, outcomeId } = uuidTarget.dataset;
+        if (uuidType && data.type !== uuidType) {
+          ui.notifications.warn(game.i18n.format('EE.TableEditor.WrongType', { expected: uuidType }));
           return;
         }
-        input.value = data.uuid;
+        this._syncFromDOM();
+        if (outcomeId) {
+          const outcome = this._tables[tableId]?.slots?.find(s => s.id === slotId)?.outcomes?.find(o => o.id === outcomeId);
+          if (outcome) outcome[field] = data.uuid;
+        } else {
+          const slot = this._tables[tableId]?.slots?.find(s => s.id === slotId);
+          if (slot) slot[field] = data.uuid;
+        }
+        this.render();
         return;
       }
 
@@ -123,6 +146,7 @@
         case 'delete-slot':     this._deleteSlot(target.dataset.tableId, target.dataset.slotId); break;
         case 'add-outcome':     this._addOutcome(target.dataset.tableId, target.dataset.slotId); break;
         case 'delete-outcome':  this._deleteOutcome(target.dataset.tableId, target.dataset.slotId, target.dataset.outcomeId); break;
+        case 'clear-uuid':      this._clearUuid(target.dataset); break;
         case 'preview-sound':   this._previewSound(target.dataset.soundUuid); break;
         case 'save':            this._save(); break;
         case 'move-slot-up':    this._moveSlot(target.dataset.tableId, target.dataset.slotId, -1); break;
@@ -249,6 +273,18 @@
       const slot = this._tables[tableId]?.slots?.find(s => s.id === slotId);
       if (!slot) return;
       slot.outcomes = (slot.outcomes ?? []).filter(o => o.id !== outcomeId);
+      this.render();
+    }
+
+    _clearUuid({ tableId, slotId, outcomeId, field }) {
+      this._syncFromDOM();
+      if (outcomeId) {
+        const outcome = this._tables[tableId]?.slots?.find(s => s.id === slotId)?.outcomes?.find(o => o.id === outcomeId);
+        if (outcome) outcome[field] = '';
+      } else {
+        const slot = this._tables[tableId]?.slots?.find(s => s.id === slotId);
+        if (slot) slot[field] = '';
+      }
       this.render();
     }
 
