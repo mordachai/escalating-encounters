@@ -8,7 +8,23 @@
       id: 'ee-trigger-editor',
       classes: ['ee-app', 'ee-trigger-editor'],
       window: { title: 'EE.TriggerEditor.Title', resizable: true, minimizable: true },
-      position: { width: 640, height: 580 }
+      position: { width: 640, height: 580 },
+      actions: {
+        "new-rule": function() { this._newRule(); },
+        "select-rule": function(event, target) { this._selectRule(target.dataset.ruleId); },
+        "delete-rule": function(event, target) { this._deleteRule(target.dataset.ruleId); },
+        "add-target": function() { this._addTarget(); },
+        "remove-target": function(event, target) { this._removeTarget(Number(target.dataset.targetIdx)); },
+        "add-excluded-scene": function() { this._addExcludedScene(); },
+        "remove-excluded-scene": function(event, target) { this._removeExcludedScene(Number(target.dataset.idx)); },
+        "copy-id": function(event, target) { this._copyToClipboard(target.dataset.ruleId); },
+        "copy-command": function(event, target) { this._copyToClipboard(`game.escalatingEncounters.trigger("${target.dataset.ruleId}")`); },
+        "copy-command-async": function(event, target) { this._copyToClipboard(`await game.escalatingEncounters.trigger("${target.dataset.ruleId}")`); },
+        "reset-macro-count": function(event, target) {
+          EE.Data.resetMacroCount(target.dataset.ruleId).then(() => this.render());
+        },
+        "save": function() { this._save(); }
+      }
     };
 
     static PARTS = {
@@ -45,17 +61,18 @@
         const rule = this._triggers[this._selectedId];
         const tables = EE.Data.getTables();
         const tableList = Object.values(tables);
-        const isSceneType = rule.type === 'sceneFirstVisit' || rule.type === 'sceneEveryVisit';
+        const type = rule.type ?? 'manual';
+        const isSceneType = type === 'sceneFirstVisit' || type === 'sceneEveryVisit';
         const sceneMode = isSceneType ? (rule.params?.sceneMode ?? 'specific') : 'specific';
 
         selected = {
           id: rule.id,
           name: rule.name,
-          type: rule.type,
+          type: type,
           params: rule.params ?? {},
-          isManual: rule.type === 'manual',
-          isSceneFirst: rule.type === 'sceneFirstVisit',
-          isSceneEvery: rule.type === 'sceneEveryVisit',
+          isManual: type === 'manual',
+          isSceneFirst: type === 'sceneFirstVisit',
+          isSceneEvery: type === 'sceneEveryVisit',
           isSceneType,
           isSceneSpecific: isSceneType && sceneMode === 'specific',
           isSceneAnyExcept: isSceneType && sceneMode === 'anyExcept',
@@ -63,10 +80,10 @@
           sceneModeAny: sceneMode === 'any',
           sceneModeAnyExcept: sceneMode === 'anyExcept',
           excludedScenes: (rule.params?.excludedSceneIds ?? []).map((uuid, idx) => ({ idx, uuid })),
-          isMacro: rule.type === 'macroNth',
-          isHook: rule.type === 'hook',
-          isTimer: rule.type === 'timer',
-          macroNote: game.i18n.format('EE.TriggerEditor.MacroNote', { id: rule.id }),
+          isMacro: type === 'macroNth',
+          firedCount: EE.Data.getState().macroCounts[rule.id] ?? 0,
+          isHook: type === 'hook',
+          isTimer: type === 'timer',
           tableList,
           targets: (rule.targets ?? []).map((target, idx) => ({
             idx,
@@ -137,21 +154,6 @@
       input.value = data.uuid;
     }
 
-    _onClickAction(event, target) {
-      const action = target.dataset.action;
-      switch (action) {
-        case 'new-rule':              this._newRule(); break;
-        case 'select-rule':           this._selectRule(target.dataset.ruleId); break;
-        case 'delete-rule':           this._deleteRule(target.dataset.ruleId); break;
-        case 'add-target':            this._addTarget(); break;
-        case 'remove-target':         this._removeTarget(Number(target.dataset.targetIdx)); break;
-        case 'add-excluded-scene':    this._addExcludedScene(); break;
-        case 'remove-excluded-scene': this._removeExcludedScene(Number(target.dataset.idx)); break;
-        case 'copy-id':               this._copyId(target.dataset.ruleId); break;
-        case 'save':                  this._save(); break;
-      }
-    }
-
     _syncFromDOM() {
       if (!this._selectedId) return;
       const rule = this._triggers[this._selectedId];
@@ -187,6 +189,11 @@
           rule.params = {
             minMinutes: Number(detail.querySelector('[name="timerMin"]')?.value ?? 1),
             maxMinutes: Number(detail.querySelector('[name="timerMax"]')?.value ?? 1)
+          };
+          break;
+        case 'macroNth':
+          rule.params = {
+            once: detail.querySelector('[name="macroOnce"]')?.checked ?? false
           };
           break;
         default:
@@ -269,8 +276,8 @@
       this.render();
     }
 
-    async _copyId(ruleId) {
-      await navigator.clipboard.writeText(ruleId);
+    async _copyToClipboard(text) {
+      await navigator.clipboard.writeText(text);
       ui.notifications.info(game.i18n.localize('EE.TriggerEditor.IdCopied'));
     }
 

@@ -18,6 +18,9 @@
     for (const { slot, outcome, count } of results) {
       const enriched = outcome?.text ? await TextEditor.enrichHTML(outcome.text) : '';
       const actor = slot.actorUuid ? await fromUuid(slot.actorUuid).catch(() => null) : null;
+      const journalLink = slot.journalUuid
+        ? await TextEditor.enrichHTML(`@UUID[${slot.journalUuid}]`).catch(() => null)
+        : null;
       const img = actor?.img
         ? `<img src="${actor.img}" class="ee-chat-portrait" alt="" />`
         : '';
@@ -27,6 +30,7 @@
           <strong class="ee-chat-slot-label">${slot.label}</strong>
           <em class="ee-chat-outcome-num">${game.i18n.format('EE.Chat.Outcome', { n: count })}</em>
           ${enriched ? `<div class="ee-chat-text">${enriched}</div>` : ''}
+          ${journalLink ? `<div class="ee-chat-journal">${journalLink}</div>` : ''}
         </div>
       </div>`;
       await ChatMessage.create({
@@ -97,7 +101,7 @@
     const interval = minMs + Math.floor(Math.random() * (steps + 1)) * step;
 
     _timerRegistry[ruleId] = setTimeout(() => {
-      if (!game.user.isGM) return;
+      if (!game.user?.isGM) return;
       const currentRule = EE.Data.getTriggers()[ruleId];
       if (!currentRule || currentRule.type !== 'timer') return;
       fireTargets(currentRule.targets ?? []);
@@ -112,7 +116,7 @@
       clearTimeout(_timerRegistry[id]);
       delete _timerRegistry[id];
     }
-    if (!game.user.isGM) return;
+    if (!game.user?.isGM) return;
     for (const [id, rule] of Object.entries(EE.Data.getTriggers())) {
       if (rule.type !== 'timer' || rule.enabled === false) continue;
       scheduleTimer(id, rule);
@@ -126,7 +130,7 @@
 
   function initEngine() {
     Hooks.on('canvasReady', () => {
-      if (!game.user.isGM) return;
+      if (!game.user?.isGM) return;
       const sceneId = canvas.scene?.id;
       if (!sceneId) return;
       const triggers = EE.Data.getTriggers();

@@ -27,7 +27,10 @@
         }
         if (rule.enabled === false) return Promise.resolve([]);
         const state = EE.Data.getState();
-        state.macroCounts[ruleId] = (state.macroCounts[ruleId] ?? 0) + 1;
+        const count = state.macroCounts[ruleId] ?? 0;
+        if (rule.params?.once && count >= 1) return Promise.resolve([]);
+
+        state.macroCounts[ruleId] = count + 1;
         EE.Data.setState(state);
         return EE.Engine.fireTargets(rule.targets ?? []);
       },
@@ -45,16 +48,8 @@
     EE.Engine.initEngine();
   });
 
-  Hooks.once('ready', async function () {
-    await loadTemplates([
-      `modules/${M}/templates/panel.hbs`,
-      `modules/${M}/templates/table-editor.hbs`,
-      `modules/${M}/templates/trigger-editor.hbs`
-    ]);
-  });
-
   Hooks.on('getSceneControlButtons', controls => {
-    if (!game.user.isGM) return;
+    if (!game.user?.isGM) return;
     if (!controls.tokens) return;
     const order = Object.keys(controls.tokens.tools).length;
     controls.tokens.tools['escalating-encounters'] = {

@@ -50,6 +50,19 @@
         <input type="text" name="ruleName" value="{{selected.name}}" />
       </div>
 
+      {{!-- Copy buttons --}}
+      <div class="ee-copy-group">
+        <button type="button" class="ee-btn-sm" data-action="copy-id" data-rule-id="{{selected.id}}">
+          {{localize "EE.TriggerEditor.CopyId"}}
+        </button>
+        <button type="button" class="ee-btn-sm" data-action="copy-command" data-rule-id="{{selected.id}}">
+          {{localize "EE.TriggerEditor.CopyCommand"}}
+        </button>
+        <button type="button" class="ee-btn-sm" data-action="copy-command-async" data-rule-id="{{selected.id}}">
+          {{localize "EE.TriggerEditor.CopyCommandAsync"}}
+        </button>
+      </div>
+
       <div class="ee-field">
         <label>{{localize "EE.TriggerEditor.Type"}}</label>
         <select name="ruleType">
@@ -126,15 +139,24 @@
       </div>
       {{/if}}
 
-      {{!-- Macro note --}}
-      {{#if selected.isMacro}}
-      <div class="ee-macro-note">
-        <code>{{selected.macroNote}}</code>
-        <button type="button" class="ee-btn-sm" data-action="copy-id" data-rule-id="{{selected.id}}">
-          {{localize "EE.TriggerEditor.CopyId"}}
-        </button>
+      {{!-- Macro info --}}
+      <div class="ee-macro-info">
+        {{#if (or selected.isMacro (eq selected.type "macroNth"))}}
+        <p class="ee-hint">{{localize "EE.TriggerEditor.MacroHowTo"}}</p>
+        <div>
+          <div class="ee-field ee-field--inline">
+            <label>{{localize "EE.TriggerEditor.MacroOnce"}}</label>
+            <input type="checkbox" name="macroOnce" {{#if selected.params.once}}checked{{/if}} />
+            <p class="ee-hint">{{localize "EE.TriggerEditor.MacroOnceHint"}}</p>
+            {{#if selected.firedCount}}
+            <button type="button" class="ee-btn-sm ee-btn-danger" data-action="reset-macro-count" data-rule-id="{{selected.id}}">
+              <i class="fas fa-undo"></i> ({{selected.firedCount}})
+            </button>
+            {{/if}}
+          </div>
+        </div>
+        {{/if}}
       </div>
-      {{/if}}
 
       {{!-- Timer params --}}
       {{#if selected.isTimer}}
@@ -148,6 +170,8 @@
         <p class="ee-hint">Fires at a random interval between min and max (20-second steps). Resets on page reload.</p>
       </div>
       {{/if}}
+
+
 
       {{!-- Targets --}}
       <div class="ee-targets-section">

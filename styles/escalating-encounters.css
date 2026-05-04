@@ -68,6 +68,7 @@
   border: none;
   padding: 2px 4px;
   line-height: 1;
+  font-size: smaller;
 }
 
 /* ── Hint / empty text ── */
@@ -200,16 +201,16 @@
   height: 100%;
   object-fit: cover;
 }
-.ee-slot-portrait[data-actor-uuid]:not([data-actor-uuid=""]) {
+.ee-slot-portrait[data-actor-uuid]:not([data-actor-uuid='']) {
   cursor: grab;
 }
-.ee-slot-portrait[data-actor-uuid]:not([data-actor-uuid=""]):active {
+.ee-slot-portrait[data-actor-uuid]:not([data-actor-uuid='']):active {
   cursor: grabbing;
 }
-.ee-result-portrait[data-actor-uuid]:not([data-actor-uuid=""]) {
+.ee-result-portrait[data-actor-uuid]:not([data-actor-uuid='']) {
   cursor: grab;
 }
-.ee-result-portrait[data-actor-uuid]:not([data-actor-uuid=""]):active {
+.ee-result-portrait[data-actor-uuid]:not([data-actor-uuid='']):active {
   cursor: grabbing;
 }
 .ee-portrait-placeholder {
@@ -381,7 +382,7 @@
 .ee-item-row {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
   padding: 4px 6px;
   border-radius: var(--ee-radius);
   cursor: pointer;
@@ -439,12 +440,16 @@
   align-items: center;
   gap: 8px;
 }
+
 .ee-field--inline label {
   flex-shrink: 0;
   font-weight: bold;
 }
 .ee-field--inline input {
-  flex: 1;
+  flex: none;
+}
+.ee-field--inline .ee-hint {
+  margin: 0;
 }
 .ee-field label {
   font-weight: bold;
@@ -657,27 +662,26 @@
   padding-top: 8px;
 }
 
-/* ── Trigger editor specifics ── */
+/* Trigger editor specifics */
 
-/* Macro note — single row, code truncates so button stays visible */
-.ee-macro-note {
+.ee-macro-info {
   background: var(--ee-muted-bg);
   border: var(--ee-border);
   border-radius: var(--ee-radius);
-  padding: 6px 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  padding: 8px 12px;
   margin-bottom: 8px;
 }
-.ee-macro-note code {
+.ee-macro-info .ee-hint {
+  margin: 8px 0;
+}
+.ee-copy-group {
+  display: flex;
+  justify-content: space-around;
+  gap: 16px;
+  padding: 8px 16px;
+}
+.ee-copy-group button {
   flex: 1;
-  min-width: 0;
-  font-size: 0.85em;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  color: var(--color-text-primary);
 }
 
 .ee-targets-section {

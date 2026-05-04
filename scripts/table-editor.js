@@ -8,7 +8,27 @@
       id: 'ee-table-editor',
       classes: ['ee-app', 'ee-table-editor'],
       window: { title: 'EE.TableEditor.Title', resizable: true, minimizable: true },
-      position: { width: 700, height: 640 }
+      position: { width: 700, height: 640 },
+      actions: {
+        "new-table": function() { this._newTable(); },
+        "select-table": function(event, target) { this._selectTable(target.dataset.tableId); },
+        "delete-table": function(event, target) { this._deleteTable(target.dataset.tableId); },
+        "add-slot": function(event, target) { this._addSlot(target.dataset.tableId); },
+        "delete-slot": function(event, target) { this._deleteSlot(target.dataset.tableId, target.dataset.slotId); },
+        "add-outcome": function(event, target) { this._addOutcome(target.dataset.tableId, target.dataset.slotId); },
+        "delete-outcome": function(event, target) { this._deleteOutcome(target.dataset.tableId, target.dataset.slotId, target.dataset.outcomeId); },
+        "clear-uuid": function(event, target) { this._clearUuid(target.dataset); },
+        "preview-sound": function(event, target) { this._previewSound(target.dataset.soundUuid); },
+        "save": function() { this._save(); },
+        "move-slot-up": function(event, target) { this._moveSlot(target.dataset.tableId, target.dataset.slotId, -1); },
+        "move-slot-down": function(event, target) { this._moveSlot(target.dataset.tableId, target.dataset.slotId, 1); },
+        "copy-advance": function(event, target) {
+          navigator.clipboard.writeText(`game.escalatingEncounters.advance("${target.dataset.tableId}", "${target.dataset.slotId}")`);
+          ui.notifications.info(game.i18n.localize('EE.TriggerEditor.IdCopied'));
+        },
+        "export-csv": function() { this._exportCSV(); },
+        "import-csv": function() { this._importCSV(); }
+      }
     };
 
     static PARTS = {
@@ -106,8 +126,9 @@
         const data = TextEditor.implementation.getDragEventData(event);
         if (!data?.uuid) return;
         const { uuidType, field, tableId, slotId, outcomeId } = uuidTarget.dataset;
-        if (uuidType && data.type !== uuidType) {
-          ui.notifications.warn(game.i18n.format('EE.TableEditor.WrongType', { expected: uuidType }));
+        const allowedTypes = uuidType ? uuidType.split(' ') : [];
+        if (allowedTypes.length && !allowedTypes.includes(data.type)) {
+          ui.notifications.warn(game.i18n.format('EE.TableEditor.WrongType', { expected: allowedTypes.join(' or ') }));
           return;
         }
         this._syncFromDOM();
@@ -133,26 +154,6 @@
         const end = textarea.selectionEnd;
         textarea.value = textarea.value.slice(0, start) + link + textarea.value.slice(end);
         textarea.selectionStart = textarea.selectionEnd = start + link.length;
-      }
-    }
-
-    _onClickAction(event, target) {
-      const action = target.dataset.action;
-      switch (action) {
-        case 'new-table':       this._newTable(); break;
-        case 'select-table':    this._selectTable(target.dataset.tableId); break;
-        case 'delete-table':    this._deleteTable(target.dataset.tableId); break;
-        case 'add-slot':        this._addSlot(target.dataset.tableId); break;
-        case 'delete-slot':     this._deleteSlot(target.dataset.tableId, target.dataset.slotId); break;
-        case 'add-outcome':     this._addOutcome(target.dataset.tableId, target.dataset.slotId); break;
-        case 'delete-outcome':  this._deleteOutcome(target.dataset.tableId, target.dataset.slotId, target.dataset.outcomeId); break;
-        case 'clear-uuid':      this._clearUuid(target.dataset); break;
-        case 'preview-sound':   this._previewSound(target.dataset.soundUuid); break;
-        case 'save':            this._save(); break;
-        case 'move-slot-up':    this._moveSlot(target.dataset.tableId, target.dataset.slotId, -1); break;
-        case 'move-slot-down':  this._moveSlot(target.dataset.tableId, target.dataset.slotId, 1); break;
-        case 'export-csv':      this._exportCSV(); break;
-        case 'import-csv':      this._importCSV(); break;
       }
     }
 

@@ -38,6 +38,12 @@
     return setState(state);
   }
 
+  function resetMacroCount(ruleId) {
+    const state = getState();
+    delete state.macroCounts[ruleId];
+    return setState(state);
+  }
+
   function resetAll() {
     return setState({ tables: {}, scenesSeen: [], macroCounts: {} });
   }
@@ -164,7 +170,7 @@
   window.EE ??= {};
   EE.Data = {
     getTables, setTables, getTriggers, setTriggers, getState, setState,
-    advanceSlot, resetSlot, resetTable, resetAll, markDefeated,
+    advanceSlot, resetSlot, resetTable, resetMacroCount, resetAll, markDefeated,
     pickRandomSlot, getOutcomeText, tablesToCSV, tablesFromCSV
   };
 })();

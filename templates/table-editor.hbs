@@ -75,6 +75,10 @@
             <span class="ee-slot-preview-name">{{this.label}}</span>
             <span class="ee-slot-outcome-count">({{this.outcomes.length}} outcomes)</span>
             <span class="ee-slot-reorder">
+              <button type="button" class="ee-btn-icon" data-action="copy-advance"
+                      data-table-id="{{this.tableId}}" data-slot-id="{{this.id}}" title="{{localize 'EE.TriggerEditor.CopyAdvance'}}">
+                <i class="fas fa-copy"></i>
+              </button>
               <button type="button" class="ee-btn-icon" data-action="move-slot-up"
                       data-table-id="{{this.tableId}}" data-slot-id="{{this.id}}" title="Move up">▲</button>
               <button type="button" class="ee-btn-icon" data-action="move-slot-down"
@@ -116,7 +120,7 @@
                 <label>{{localize "EE.TableEditor.JournalUuid"}}</label>
                 {{#if this.journalLink}}
                 <div class="ee-doc-link-display"
-                     data-uuid-type="JournalEntry"
+                     data-uuid-type="JournalEntry JournalEntryPage"
                      data-field="journalUuid"
                      data-table-id="{{this.tableId}}"
                      data-slot-id="{{this.id}}">
@@ -129,9 +133,9 @@
                 </div>
                 {{else}}
                 <input type="text" name="journalUuid" class="ee-uuid-input"
-                       data-uuid-type="JournalEntry" data-field="journalUuid"
+                       data-uuid-type="JournalEntry JournalEntryPage" data-field="journalUuid"
                        data-table-id="{{this.tableId}}" data-slot-id="{{this.id}}"
-                       value="" placeholder="Drag a Journal Entry here" />
+                       value="" placeholder="Drag a Journal or Page here" />
                 {{/if}}
               </div>
             </div>
