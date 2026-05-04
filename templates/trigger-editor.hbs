@@ -1,0 +1,206 @@
+<div class="ee-editor-layout">
+
+  {{!-- Left: rule list --}}
+  <aside class="ee-list-pane">
+    <div class="ee-pane-header">
+      <span>{{localize "EE.TriggerEditor.Title"}}</span>
+      <button type="button" class="ee-btn-primary ee-btn-sm" data-action="new-rule">
+        + {{localize "EE.TriggerEditor.NewRule"}}
+      </button>
+    </div>
+    <ul class="ee-item-list">
+      {{#each ruleList}}
+      <li class="ee-item-row{{#if this.isSelected}} selected{{/if}}{{#unless this.enabled}} ee-rule-disabled{{/unless}}">
+        <input type="checkbox"
+               class="ee-rule-enabled-check"
+               name="ruleEnabled"
+               data-rule-id="{{this.id}}"
+               {{#if this.enabled}}checked{{/if}}
+               title="Enable / disable this rule" />
+        <span class="ee-item-name"
+              data-action="select-rule"
+              data-rule-id="{{this.id}}"
+              role="button"
+              tabindex="0">
+          {{this.name}}
+          <em class="ee-rule-type">{{this.type}}</em>
+        </span>
+        <button type="button"
+                class="ee-btn-danger ee-btn-icon"
+                data-action="delete-rule"
+                data-rule-id="{{this.id}}"
+                title="{{localize 'EE.TriggerEditor.Delete'}}">
+          <i class="fas fa-trash"></i>
+        </button>
+      </li>
+      {{else}}
+      <li class="ee-hint">No rules yet.</li>
+      {{/each}}
+    </ul>
+  </aside>
+
+  {{!-- Right: rule detail --}}
+  <main class="ee-detail-pane">
+    {{#if selected}}
+
+    <div class="ee-rule-detail">
+
+      <div class="ee-field ee-field--inline">
+        <label>{{localize "EE.TriggerEditor.RuleName"}}</label>
+        <input type="text" name="ruleName" value="{{selected.name}}" />
+      </div>
+
+      <div class="ee-field">
+        <label>{{localize "EE.TriggerEditor.Type"}}</label>
+        <select name="ruleType">
+          <option value="manual"           {{#if selected.isManual}}selected{{/if}}>{{localize "EE.TriggerEditor.TypeManual"}}</option>
+          <option value="sceneFirstVisit"  {{#if selected.isSceneFirst}}selected{{/if}}>{{localize "EE.TriggerEditor.TypeSceneFirst"}}</option>
+          <option value="sceneEveryVisit"  {{#if selected.isSceneEvery}}selected{{/if}}>{{localize "EE.TriggerEditor.TypeSceneEvery"}}</option>
+          <option value="macroNth"         {{#if selected.isMacro}}selected{{/if}}>{{localize "EE.TriggerEditor.TypeMacro"}}</option>
+          <option value="hook"             {{#if selected.isHook}}selected{{/if}}>{{localize "EE.TriggerEditor.TypeHook"}}</option>
+          <option value="timer"            {{#if selected.isTimer}}selected{{/if}}>{{localize "EE.TriggerEditor.TypeTimer"}}</option>
+        </select>
+      </div>
+
+      {{!-- Scene params --}}
+      {{#if selected.isSceneType}}
+      <div class="ee-field">
+        <label>{{localize "EE.TriggerEditor.SceneMode"}}</label>
+        <select name="sceneMode">
+          <option value="specific"  {{#if selected.sceneModeSpecific}}selected{{/if}}>{{localize "EE.TriggerEditor.SceneModeSpecific"}}</option>
+          <option value="any"       {{#if selected.sceneModeAny}}selected{{/if}}>{{localize "EE.TriggerEditor.SceneModeAny"}}</option>
+          <option value="anyExcept" {{#if selected.sceneModeAnyExcept}}selected{{/if}}>{{localize "EE.TriggerEditor.SceneModeAnyExcept"}}</option>
+        </select>
+      </div>
+
+      {{#if selected.isSceneSpecific}}
+      <div class="ee-field">
+        <label>{{localize "EE.TriggerEditor.SceneUuid"}}</label>
+        <input type="text"
+               name="sceneUuid"
+               class="ee-uuid-input"
+               data-uuid-type="Scene"
+               value="{{selected.params.sceneId}}"
+               placeholder="Drag a Scene here" />
+      </div>
+      {{/if}}
+
+      {{#if selected.isSceneAnyExcept}}
+      <div class="ee-excluded-scenes">
+        <div class="ee-section-header">
+          <label>{{localize "EE.TriggerEditor.ExcludedScenes"}}</label>
+          <button type="button" class="ee-btn-sm" data-action="add-excluded-scene">
+            + {{localize "EE.TriggerEditor.AddExcludedScene"}}
+          </button>
+        </div>
+        {{#each selected.excludedScenes}}
+        <div class="ee-excluded-scene-row">
+          <input type="text"
+                 name="excludedSceneId"
+                 class="ee-uuid-input"
+                 data-uuid-type="Scene"
+                 value="{{this.uuid}}"
+                 placeholder="Drag a Scene here" />
+          <button type="button"
+                  class="ee-btn-icon ee-btn-danger"
+                  data-action="remove-excluded-scene"
+                  data-idx="{{this.idx}}"
+                  title="Remove">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+      {{/if}}
+
+      {{!-- Hook params --}}
+      {{#if selected.isHook}}
+      <div class="ee-field">
+        <label>{{localize "EE.TriggerEditor.HookName"}}</label>
+        <input type="text" name="hookName" value="{{selected.params.hookName}}" placeholder="e.g. combatStart" />
+      </div>
+      <div class="ee-field">
+        <label>{{localize "EE.TriggerEditor.HookCondition"}}</label>
+        <textarea name="condition" rows="2" placeholder="Optional JS expression returning true/false">{{selected.params.condition}}</textarea>
+      </div>
+      {{/if}}
+
+      {{!-- Macro note --}}
+      {{#if selected.isMacro}}
+      <div class="ee-macro-note">
+        <code>{{selected.macroNote}}</code>
+        <button type="button" class="ee-btn-sm" data-action="copy-id" data-rule-id="{{selected.id}}">
+          {{localize "EE.TriggerEditor.CopyId"}}
+        </button>
+      </div>
+      {{/if}}
+
+      {{!-- Timer params --}}
+      {{#if selected.isTimer}}
+      <div class="ee-timer-params">
+        <div class="ee-field ee-field--inline">
+          <label>{{localize "EE.TriggerEditor.TimerMin"}}</label>
+          <input type="number" name="timerMin" min="0.1" step="0.1" value="{{selected.params.minMinutes}}" />
+          <label>{{localize "EE.TriggerEditor.TimerMax"}}</label>
+          <input type="number" name="timerMax" min="0.1" step="0.1" value="{{selected.params.maxMinutes}}" />
+        </div>
+        <p class="ee-hint">Fires at a random interval between min and max (20-second steps). Resets on page reload.</p>
+      </div>
+      {{/if}}
+
+      {{!-- Targets --}}
+      <div class="ee-targets-section">
+        <div class="ee-section-header">
+          <h4>{{localize "EE.TriggerEditor.Targets"}}</h4>
+          <button type="button" class="ee-btn-sm" data-action="add-target">
+            + {{localize "EE.TriggerEditor.AddTarget"}}
+          </button>
+        </div>
+
+        {{#each selected.targets}}
+        <div class="ee-target-row" data-target-idx="{{this.idx}}">
+          <div class="ee-target-fields">
+            <label>{{localize "EE.TriggerEditor.Table"}}</label>
+            <select name="targetTable" data-target-idx="{{this.idx}}">
+              <option value="">— select table —</option>
+              {{#each this.tableOptions}}
+              <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
+              {{/each}}
+            </select>
+            <label>{{localize "EE.TriggerEditor.Slot"}}</label>
+            <select name="targetSlot">
+              {{#each this.slotOptions}}
+              <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
+              {{/each}}
+            </select>
+          </div>
+          <button type="button"
+                  class="ee-btn-icon ee-btn-danger"
+                  data-action="remove-target"
+                  data-target-idx="{{this.idx}}"
+                  title="Remove">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        {{else}}
+        <p class="ee-hint">No targets yet. Add at least one table to advance.</p>
+        {{/each}}
+      </div>
+
+      <div class="ee-editor-actions">
+        <button type="button" class="ee-btn-primary" data-action="save">
+          {{localize "EE.TriggerEditor.Save"}}
+        </button>
+      </div>
+
+    </div>
+
+    {{else}}
+    <div class="ee-empty-state">
+      <p>Select a rule to edit, or create a new one.</p>
+    </div>
+    {{/if}}
+  </main>
+
+</div>

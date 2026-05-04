@@ -1,0 +1,139 @@
+<div class="ee-panel-wrap">
+
+  {{!-- Empty state --}}
+  {{#unless tableList.length}}
+  <div class="ee-empty-state">
+    <p>No encounter tables yet. Create one to get started.</p>
+    <button type="button" data-action="open-table-editor">
+      {{localize "EE.Panel.OpenTableEditor"}}
+    </button>
+  </div>
+  {{/unless}}
+
+  {{!-- Table tabs --}}
+  {{#if tableList.length}}
+  <nav class="ee-table-tabs">
+    {{#each tableList}}
+    <button type="button"
+            class="ee-tab-btn {{#if this.isActive}}active{{/if}}"
+            data-action="select-table"
+            data-table-id="{{this.id}}">
+      {{this.name}}
+    </button>
+    {{/each}}
+  </nav>
+
+  {{!-- Active table view --}}
+  {{#if activeTable}}
+  <div class="ee-table-view">
+
+    <div class="ee-table-toolbar">
+      <button type="button" class="ee-btn-primary" data-action="roll-table" data-table-id="{{activeTable.id}}">
+        <i class="fas fa-dice-d20"></i> {{localize "EE.Panel.Roll"}}
+      </button>
+      <button type="button" class="ee-btn-danger ee-btn-sm" data-action="reset-table" data-table-id="{{activeTable.id}}">
+        {{localize "EE.Panel.Reset"}}
+      </button>
+    </div>
+
+    {{!-- Last result --}}
+    {{#if lastResult}}
+    <div class="ee-last-result">
+      <div class="ee-result-header">
+        {{#if lastResult.actorImg}}
+        <img src="{{lastResult.actorImg}}"
+             class="ee-result-portrait"
+             draggable="true"
+             data-actor-uuid="{{lastResult.actorUuid}}"
+             alt="" />
+        {{/if}}
+        <div class="ee-result-meta">
+          <strong>{{lastResult.slotLabel}}</strong>
+          <em>{{localize "EE.Chat.Outcome"}} {{lastResult.count}}</em>
+        </div>
+      </div>
+      {{#if lastResult.enriched}}
+      <div class="ee-result-text">{{{lastResult.enriched}}}</div>
+      {{/if}}
+    </div>
+    {{/if}}
+
+    <div class="ee-slots">
+      {{#each activeTable.slots}}
+      <div class="ee-slot{{#if this.defeated}} ee-slot--defeated{{/if}}{{#if this.atMax}} ee-slot--exhausted{{/if}}">
+
+        <div class="ee-slot-portrait"
+             draggable="true"
+             data-actor-uuid="{{this.actorUuid}}">
+          {{#if this.actorImg}}
+          <img src="{{this.actorImg}}" alt="" draggable="false" />
+          {{else}}
+          <div class="ee-portrait-placeholder"><i class="fas fa-user"></i></div>
+          {{/if}}
+        </div>
+
+        <div class="ee-slot-body">
+          <div class="ee-slot-label">{{this.label}}</div>
+          <div class="ee-outcome-pips">
+            {{#each this.outcomes}}
+            <span class="ee-pip{{#if this.done}} done{{/if}}" title="{{this.text}}"></span>
+            {{/each}}
+            {{#unless this.outcomes.length}}
+            <span class="ee-no-outcomes">—</span>
+            {{/unless}}
+          </div>
+          <div class="ee-slot-count">{{this.count}} / {{this.total}}</div>
+        </div>
+
+        <div class="ee-slot-controls">
+          <button type="button"
+                  class="ee-btn-icon"
+                  data-action="advance-slot"
+                  data-table-id="{{this.tableId}}"
+                  data-slot-id="{{this.id}}"
+                  title="{{localize 'EE.Panel.ManualAdvance'}}"
+                  {{#if (or this.defeated this.atMax)}}disabled{{/if}}>
+            <i class="fas fa-forward-step"></i>
+          </button>
+          <button type="button"
+                  class="ee-btn-icon ee-btn-muted"
+                  data-action="reset-slot"
+                  data-table-id="{{this.tableId}}"
+                  data-slot-id="{{this.id}}"
+                  title="{{localize 'EE.Panel.Reset'}}">
+            <i class="fas fa-rotate-left"></i>
+          </button>
+          <label class="ee-defeated-label">
+            <input type="checkbox"
+                   data-action="toggle-defeated"
+                   data-table-id="{{this.tableId}}"
+                   data-slot-id="{{this.id}}"
+                   {{#if this.defeated}}checked{{/if}} />
+            <span>Defeated</span>
+          </label>
+        </div>
+
+      </div>
+      {{else}}
+      <p class="ee-hint">No slots in this table. Add some in the Table Editor.</p>
+      {{/each}}
+    </div>
+
+  </div>
+  {{/if}}
+  {{/if}}
+
+  {{!-- Footer --}}
+  <div class="ee-panel-footer">
+    <button type="button" data-action="open-table-editor">
+      <i class="fas fa-table"></i> {{localize "EE.Panel.OpenTableEditor"}}
+    </button>
+    <button type="button" data-action="open-trigger-editor">
+      <i class="fas fa-bolt"></i> {{localize "EE.Panel.OpenTriggerEditor"}}
+    </button>
+    <button type="button" class="ee-btn-danger" data-action="reset-all">
+      {{localize "EE.Panel.ResetAll"}}
+    </button>
+  </div>
+
+</div>

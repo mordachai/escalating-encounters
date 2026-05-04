@@ -1,0 +1,330 @@
+// scripts/table-editor.js — Table CRUD editor ApplicationV2
+(function () {
+  'use strict';
+  const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
+
+  class TableEditor extends HandlebarsApplicationMixin(ApplicationV2) {
+    static DEFAULT_OPTIONS = {
+      id: 'ee-table-editor',
+      classes: ['ee-app', 'ee-table-editor'],
+      window: { title: 'EE.TableEditor.Title', resizable: true, minimizable: true },
+      position: { width: 700, height: 640 }
+    };
+
+    static PARTS = {
+      main: { template: 'modules/escalating-encounters/templates/table-editor.hbs' }
+    };
+
+    static _instance = null;
+
+    _tables = null;
+    _selectedId = null;
+    _openSlots = new Set();
+    _scrollTop = null;
+
+    static open() {
+      if (!TableEditor._instance) TableEditor._instance = new TableEditor();
+      const inst = TableEditor._instance;
+      if (inst.rendered) inst.bringToTop();
+      else inst.render(true);
+      return inst;
+    }
+
+    async _onClose(options) {
+      TableEditor._instance = null;
+    }
+
+    async _prepareContext(options) {
+      if (!this._tables) this._tables = foundry.utils.deepClone(EE.Data.getTables());
+
+      const tableList = Object.values(this._tables).map(t => ({
+        id: t.id, name: t.name, isSelected: t.id === this._selectedId
+      }));
+
+      let selected = null;
+      if (this._selectedId && this._tables[this._selectedId]) {
+        const t = this._tables[this._selectedId];
+        selected = {
+          id: t.id,
+          name: t.name,
+          slots: (t.slots ?? []).map((slot, si) => ({
+            id: slot.id,
+            label: slot.label,
+            actorUuid: slot.actorUuid ?? '',
+            journalUuid: slot.journalUuid ?? '',
+            tableId: t.id,
+            num: si + 1,
+            isOpen: this._openSlots.has(slot.id),
+            outcomes: (slot.outcomes ?? []).map((o, oi) => ({
+              id: o.id,
+              text: o.text ?? '',
+              soundUuid: o.soundUuid ?? '',
+              num: oi + 1,
+              tableId: t.id,
+              slotId: slot.id
+            }))
+          }))
+        };
+      }
+
+      return { tableList, selected };
+    }
+
+    async _onFirstRender(context, options) {
+      this.element.addEventListener('dragover', e => e.preventDefault());
+      this.element.addEventListener('drop', this._onDrop.bind(this));
+    }
+
+    async _onRender(context, options) {
+      if (this._scrollTop != null) {
+        const pane = this.element.querySelector('.ee-detail-pane');
+        if (pane) pane.scrollTop = this._scrollTop;
+        this._scrollTop = null;
+      }
+    }
+
+    _onDrop(event) {
+      // UUID input fields (actor, journal, sound slots)
+      const input = event.target.closest('[data-uuid-type]');
+      if (input) {
+        event.preventDefault();
+        const data = TextEditor.implementation.getDragEventData(event);
+        if (!data?.uuid) return;
+        const expected = input.dataset.uuidType;
+        if (expected && data.type !== expected) {
+          ui.notifications.warn(game.i18n.format('EE.TableEditor.WrongType', { expected }));
+          return;
+        }
+        input.value = data.uuid;
+        return;
+      }
+
+      // Outcome text textarea — insert @UUID[...] link at cursor position
+      const textarea = event.target.closest('textarea[name="outcomeText"]');
+      if (textarea) {
+        event.preventDefault();
+        const data = TextEditor.implementation.getDragEventData(event);
+        if (!data?.uuid) return;
+        const link = `@UUID[${data.uuid}]`;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        textarea.value = textarea.value.slice(0, start) + link + textarea.value.slice(end);
+        textarea.selectionStart = textarea.selectionEnd = start + link.length;
+      }
+    }
+
+    _onClickAction(event, target) {
+      const action = target.dataset.action;
+      switch (action) {
+        case 'new-table':       this._newTable(); break;
+        case 'select-table':    this._selectTable(target.dataset.tableId); break;
+        case 'delete-table':    this._deleteTable(target.dataset.tableId); break;
+        case 'add-slot':        this._addSlot(target.dataset.tableId); break;
+        case 'delete-slot':     this._deleteSlot(target.dataset.tableId, target.dataset.slotId); break;
+        case 'add-outcome':     this._addOutcome(target.dataset.tableId, target.dataset.slotId); break;
+        case 'delete-outcome':  this._deleteOutcome(target.dataset.tableId, target.dataset.slotId, target.dataset.outcomeId); break;
+        case 'preview-sound':   this._previewSound(target.dataset.soundUuid); break;
+        case 'save':            this._save(); break;
+        case 'move-slot-up':    this._moveSlot(target.dataset.tableId, target.dataset.slotId, -1); break;
+        case 'move-slot-down':  this._moveSlot(target.dataset.tableId, target.dataset.slotId, 1); break;
+        case 'export-csv':      this._exportCSV(); break;
+        case 'import-csv':      this._importCSV(); break;
+      }
+    }
+
+    _captureUIState() {
+      if (!this.element) return;
+      const pane = this.element.querySelector('.ee-detail-pane');
+      this._scrollTop = pane?.scrollTop ?? null;
+      this._openSlots = new Set();
+      for (const det of this.element.querySelectorAll('.ee-slot-editor')) {
+        if (det.open) this._openSlots.add(det.dataset.slotId);
+      }
+    }
+
+    _syncFromDOM() {
+      this._captureUIState();
+      if (!this._selectedId) return;
+      const t = this._tables[this._selectedId];
+      if (!t) return;
+
+      const detail = this.element.querySelector('.ee-table-detail');
+      if (!detail) return;
+
+      t.name = detail.querySelector('[name="tableName"]')?.value ?? t.name;
+
+      const slotEls = detail.querySelectorAll('.ee-slot-editor');
+      for (const slotEl of slotEls) {
+        const slotId = slotEl.dataset.slotId;
+        const slot = t.slots?.find(s => s.id === slotId);
+        if (!slot) continue;
+        slot.label = slotEl.querySelector('[name="slotLabel"]')?.value ?? slot.label;
+        slot.actorUuid = slotEl.querySelector('[name="actorUuid"]')?.value ?? slot.actorUuid;
+        slot.journalUuid = slotEl.querySelector('[name="journalUuid"]')?.value ?? slot.journalUuid;
+
+        const outcomeEls = slotEl.querySelectorAll('.ee-outcome-row');
+        for (const oEl of outcomeEls) {
+          const outcomeId = oEl.dataset.outcomeId;
+          const outcome = slot.outcomes?.find(o => o.id === outcomeId);
+          if (!outcome) continue;
+          outcome.text = oEl.querySelector('[name="outcomeText"]')?.value ?? outcome.text;
+          outcome.soundUuid = oEl.querySelector('[name="soundUuid"]')?.value ?? outcome.soundUuid;
+        }
+      }
+    }
+
+    _newTable() {
+      this._syncFromDOM();
+      const id = foundry.utils.randomID();
+      this._tables[id] = { id, name: 'New Table', slots: [] };
+      this._selectedId = id;
+      this.render();
+    }
+
+    _selectTable(tableId) {
+      this._syncFromDOM();
+      this._selectedId = tableId;
+      this.render();
+    }
+
+    async _deleteTable(tableId) {
+      const confirmed = await DialogV2.confirm({
+        content: `<p>${game.i18n.localize('EE.TableEditor.DeleteConfirm')}</p>`,
+        rejectClose: false, modal: true
+      });
+      if (!confirmed) return;
+      delete this._tables[tableId];
+      if (this._selectedId === tableId) this._selectedId = null;
+      await EE.Data.setTables(this._tables);
+      const state = EE.Data.getState();
+      for (const tid of Object.keys(state.tables)) {
+        if (!this._tables[tid]) delete state.tables[tid];
+      }
+      await EE.Data.setState(state);
+      if (EE.Panel._instance?.rendered) EE.Panel._instance.render();
+      this.render();
+    }
+
+    _addSlot(tableId) {
+      this._syncFromDOM();
+      const t = this._tables[tableId];
+      if (!t) return;
+      t.slots ??= [];
+      t.slots.push({ id: foundry.utils.randomID(), label: 'New Slot', actorUuid: '', journalUuid: '', outcomes: [] });
+      this.render();
+    }
+
+    _deleteSlot(tableId, slotId) {
+      this._syncFromDOM();
+      const t = this._tables[tableId];
+      if (!t) return;
+      t.slots = (t.slots ?? []).filter(s => s.id !== slotId);
+      this.render();
+    }
+
+    _moveSlot(tableId, slotId, dir) {
+      this._syncFromDOM();
+      const t = this._tables[tableId];
+      if (!t) return;
+      const slots = t.slots ?? [];
+      const idx = slots.findIndex(s => s.id === slotId);
+      if (idx < 0) return;
+      const newIdx = idx + dir;
+      if (newIdx < 0 || newIdx >= slots.length) return;
+      [slots[idx], slots[newIdx]] = [slots[newIdx], slots[idx]];
+      this.render();
+    }
+
+    _addOutcome(tableId, slotId) {
+      this._syncFromDOM();
+      const slot = this._tables[tableId]?.slots?.find(s => s.id === slotId);
+      if (!slot) return;
+      slot.outcomes ??= [];
+      slot.outcomes.push({ id: foundry.utils.randomID(), text: '', soundUuid: '' });
+      this.render();
+    }
+
+    _deleteOutcome(tableId, slotId, outcomeId) {
+      this._syncFromDOM();
+      const slot = this._tables[tableId]?.slots?.find(s => s.id === slotId);
+      if (!slot) return;
+      slot.outcomes = (slot.outcomes ?? []).filter(o => o.id !== outcomeId);
+      this.render();
+    }
+
+    _previewSound(soundUuid) {
+      if (soundUuid) EE.Engine.playSound(soundUuid);
+    }
+
+    _exportCSV() {
+      const tables = this._tables ?? EE.Data.getTables();
+      const csv = EE.Data.tablesToCSV(tables);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'escalating-encounters.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    async _importCSV() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.csv,text/csv,text/plain';
+      input.addEventListener('change', async () => {
+        const file = input.files[0];
+        if (!file) return;
+        const text = await file.text();
+        const imported = EE.Data.tablesFromCSV(text);
+        const count = Object.keys(imported).length;
+        if (!count) {
+          ui.notifications.warn(game.i18n.localize('EE.TableEditor.ImportEmpty'));
+          return;
+        }
+        const names = Object.values(imported).map(t => `<li>${t.name}</li>`).join('');
+        const confirmed = await DialogV2.confirm({
+          content: `<p>${game.i18n.format('EE.TableEditor.ImportConfirm', { count })}</p><ul>${names}</ul>`,
+          rejectClose: false, modal: true
+        });
+        if (!confirmed) return;
+
+        this._tables = imported;
+        this._selectedId = null;
+        await EE.Data.setTables(imported);
+
+        // Prune orphaned state
+        const state = EE.Data.getState();
+        for (const tid of Object.keys(state.tables)) {
+          if (!imported[tid]) delete state.tables[tid];
+        }
+        await EE.Data.setState(state);
+
+        ui.notifications.info(game.i18n.format('EE.TableEditor.ImportDone', { count }));
+        if (EE.Panel._instance?.rendered) EE.Panel._instance.render();
+        this.render();
+      });
+      input.click();
+    }
+
+    async _save() {
+      this._syncFromDOM();
+      await EE.Data.setTables(this._tables);
+
+      // Remove orphaned state for deleted tables
+      const state = EE.Data.getState();
+      for (const tableId of Object.keys(state.tables)) {
+        if (!this._tables[tableId]) delete state.tables[tableId];
+      }
+      await EE.Data.setState(state);
+
+      ui.notifications.info(game.i18n.localize('EE.TableEditor.Saved'));
+      if (EE.Panel._instance?.rendered) EE.Panel._instance.render();
+    }
+  }
+
+  window.EE ??= {};
+  EE.TableEditor = TableEditor;
+})();

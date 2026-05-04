@@ -7,8 +7,17 @@
     "minimum": "13",
     "verified": "13"
   },
-  "scripts": [],
-  "styles": [],
+  "scripts": [
+    "scripts/data.js",
+    "scripts/engine.js",
+    "scripts/panel.js",
+    "scripts/table-editor.js",
+    "scripts/trigger-editor.js",
+    "scripts/main.js"
+  ],
+  "styles": [
+    "styles/escalating-encounters.css"
+  ],
   "languages": [
     {
       "lang": "en",

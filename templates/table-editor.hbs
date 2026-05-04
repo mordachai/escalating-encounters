@@ -1,0 +1,194 @@
+<div class="ee-editor-layout">
+
+  {{!-- Left: table list --}}
+  <aside class="ee-list-pane">
+    <div class="ee-pane-header">
+      <span>{{localize "EE.TableEditor.Title"}}</span>
+      <div class="ee-pane-actions">
+        <button type="button" 
+                class="ee-btn-primary ee-btn-sm" 
+                data-action="new-table"
+                title="{{localize "EE.TableEditor.NewTable"}}">
+          <i class="fas fa-plus"></i>
+        </button>
+        <button type="button"
+                class="ee-btn-sm"
+                data-action="export-csv"
+                title="{{localize 'EE.TableEditor.ExportCSV'}}">
+          <i class="fas fa-file-export"></i>
+        </button>
+        <button type="button"
+                class="ee-btn-sm"
+                data-action="import-csv"
+                title="{{localize 'EE.TableEditor.ImportCSV'}}">
+          <i class="fas fa-file-import"></i>
+        </button>
+      </div>
+    </div>
+    <ul class="ee-item-list">
+      {{#each tableList}}
+      <li class="ee-item-row{{#if this.isSelected}} selected{{/if}}">
+        <span class="ee-item-name"
+              data-action="select-table"
+              data-table-id="{{this.id}}"
+              role="button"
+              tabindex="0">
+          {{this.name}}
+        </span>
+        <button type="button"
+                class="ee-btn-danger ee-btn-icon"
+                data-action="delete-table"
+                data-table-id="{{this.id}}"
+                title="{{localize 'EE.TableEditor.Delete'}}">
+          <i class="fas fa-trash"></i>
+        </button>
+      </li>
+      {{else}}
+      <li class="ee-hint">No tables yet.</li>
+      {{/each}}
+    </ul>
+  </aside>
+
+  {{!-- Right: table detail --}}
+  <main class="ee-detail-pane">
+    {{#if selected}}
+
+    <div class="ee-table-detail">
+
+      <div class="ee-field ee-field--inline">
+        <label>{{localize "EE.TableEditor.TableName"}}</label>
+        <input type="text" name="tableName" value="{{selected.name}}" />
+      </div>
+
+      <div class="ee-slots-section">
+        <div class="ee-section-header">
+          <h4>Slots</h4>
+          <button type="button" class="ee-btn-sm" data-action="add-slot" data-table-id="{{selected.id}}">
+            + {{localize "EE.TableEditor.AddSlot"}}
+          </button>
+        </div>
+
+        {{#each selected.slots}}
+        <details class="ee-slot-editor" {{#if this.isOpen}}open{{/if}} data-table-id="{{this.tableId}}" data-slot-id="{{this.id}}">
+          <summary class="ee-slot-summary">
+            <span class="ee-slot-num">{{this.num}}.</span>
+            <span class="ee-slot-preview-name">{{this.label}}</span>
+            <span class="ee-slot-outcome-count">({{this.outcomes.length}} outcomes)</span>
+            <span class="ee-slot-reorder">
+              <button type="button" class="ee-btn-icon" data-action="move-slot-up"
+                      data-table-id="{{this.tableId}}" data-slot-id="{{this.id}}" title="Move up">▲</button>
+              <button type="button" class="ee-btn-icon" data-action="move-slot-down"
+                      data-table-id="{{this.tableId}}" data-slot-id="{{this.id}}" title="Move down">▼</button>
+            </span>
+          </summary>
+
+          <div class="ee-slot-fields">
+
+            <div class="ee-field">
+              <label>{{localize "EE.TableEditor.SlotLabel"}}</label>
+              <input type="text" name="slotLabel" value="{{this.label}}" />
+            </div>
+
+            <div class="ee-field-row">
+              <div class="ee-field">
+                <label>{{localize "EE.TableEditor.ActorUuid"}}</label>
+                <input type="text"
+                       name="actorUuid"
+                       class="ee-uuid-input"
+                       data-uuid-type="Actor"
+                       value="{{this.actorUuid}}"
+                       placeholder="Drag an Actor here" />
+              </div>
+              <div class="ee-field">
+                <label>{{localize "EE.TableEditor.JournalUuid"}}</label>
+                <input type="text"
+                       name="journalUuid"
+                       class="ee-uuid-input"
+                       data-uuid-type="JournalEntry"
+                       value="{{this.journalUuid}}"
+                       placeholder="Drag a Journal Entry here" />
+              </div>
+            </div>
+
+            <div class="ee-outcomes-section">
+              <div class="ee-section-header">
+                <h5>{{localize "EE.TableEditor.AddOutcome"}}</h5>
+                <button type="button" class="ee-btn-sm"
+                        data-action="add-outcome"
+                        data-table-id="{{this.tableId}}"
+                        data-slot-id="{{this.id}}">
+                  + Outcome
+                </button>
+              </div>
+
+              {{#each this.outcomes}}
+              <div class="ee-outcome-row" data-outcome-id="{{this.id}}">
+                <span class="ee-outcome-num">{{this.num}}</span>
+                <div class="ee-outcome-fields">
+                  <textarea name="outcomeText"
+                            rows="2"
+                            placeholder="{{localize 'EE.TableEditor.OutcomeText'}}">{{this.text}}</textarea>
+                  <div class="ee-outcome-sound-row">
+                    <input type="text"
+                           name="soundUuid"
+                           class="ee-uuid-input"
+                           data-uuid-type="PlaylistSound"
+                           value="{{this.soundUuid}}"
+                           placeholder="Drag a Sound here" />
+                    <button type="button"
+                            class="ee-btn-sm"
+                            data-action="preview-sound"
+                            data-sound-uuid="{{this.soundUuid}}"
+                            title="{{localize 'EE.TableEditor.PreviewSound'}}">
+                      <i class="fas fa-play"></i>
+                    </button>
+                  </div>
+                </div>
+                <button type="button"
+                        class="ee-btn-icon ee-btn-danger"
+                        data-action="delete-outcome"
+                        data-table-id="{{this.tableId}}"
+                        data-slot-id="{{this.slotId}}"
+                        data-outcome-id="{{this.id}}"
+                        title="Remove">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              {{else}}
+              <p class="ee-hint">No outcomes yet. Add at least one.</p>
+              {{/each}}
+            </div>
+
+            <div class="ee-slot-footer">
+              <button type="button"
+                      class="ee-btn-danger ee-btn-sm"
+                      data-action="delete-slot"
+                      data-table-id="{{this.tableId}}"
+                      data-slot-id="{{this.id}}">
+                Delete Slot
+              </button>
+            </div>
+
+          </div>
+        </details>
+        {{else}}
+        <p class="ee-hint">No slots yet. Add one above.</p>
+        {{/each}}
+      </div>
+
+      <div class="ee-editor-actions">
+        <button type="button" class="ee-btn-primary" data-action="save">
+          {{localize "EE.TableEditor.Save"}}
+        </button>
+      </div>
+
+    </div>
+
+    {{else}}
+    <div class="ee-empty-state">
+      <p>Select a table to edit, or create a new one.</p>
+    </div>
+    {{/if}}
+  </main>
+
+</div>
