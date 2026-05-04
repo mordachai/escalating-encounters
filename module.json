@@ -1,0 +1,28 @@
+{
+  "id": "escalating-encounters",
+  "title": "Escalating Encounters",
+  "description": "A GM tool for managing sequential, trigger-driven encounter tables. Tables advance step-by-step; triggers fire automatically on scene entry, macro calls, Foundry hooks, or manually.",
+  "version": "0.1.0",
+  "compatibility": {
+    "minimum": "13",
+    "verified": "13"
+  },
+  "scripts": [],
+  "styles": [],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "authors": [
+    {
+      "name": "Gus",
+      "email": "gus.santos3d@gmail.com"
+    }
+  ],
+  "url": "",
+  "manifest": "",
+  "download": ""
+}
