@@ -22,7 +22,7 @@ Countless adventures and sourcebooks use the same powerful design pattern: a reg
 - **GM Panel**: A dedicated view to manage everything. Roll random slots, advance them manually, or toggle "defeated" status to skip slots.
 - **Journal Links**: Link a Journal Entry or a specific Journal Page to a slot. Every time that slot fires, the chat card shows a clickable link that opens the journal directly to that page.
 - **Rich Editors**: Build your tables and triggers with ease. Drag and drop Actors, Journals, and Sounds directly from the sidebar.
-- **CSV Import/Export**: Manage large encounter tables in a spreadsheet and import them with one click.
+- **JSON Import/Export**: Back up or share your tables and triggers as a JSON file. Export opens a native Save As dialog so you choose where the file lands.
 - **Chat Integration**: Automatically whispers the outcome to the GM — enriched HTML text, actor portrait, and journal link all in one card.
 
 ---
@@ -68,7 +68,7 @@ In the **Trigger Editor**, you define when tables should advance:
 - **Manual**: Only fires when you click from the panel.
 - **Scene — First Visit**: Fires once the first time a scene becomes active. Scope to a specific scene, any scene, or any scene except a list of exclusions.
 - **Scene — Every Visit**: Same as above but fires every time, not just the first.
-- **Macro API Call**: Fires when you call the rule from a macro. Optionally set it to fire only once ever.
+- **Macro API Call**: Fires when you call the rule from a macro. Three repeat modes — **Unlimited** (fires every call), **Once total** (fires only on the first call ever, then ignores all others until reset), or **Once per macro** (each individual macro can only fire this rule once; subsequent calls from the same macro are ignored). The caller audit dialog lets you see which macros have fired and reset them individually or all at once.
 - **Foundry Hook**: Fires on any named Foundry hook (e.g. `createCombat`, `pauseGame`) with an optional JS condition expression.
 - **Timer**: Fires at a random interval between a minimum and maximum number of minutes you set, then re-schedules itself automatically.
 
@@ -77,10 +77,17 @@ In the **Trigger Editor**, you define when tables should advance:
 ## Public API
 
 ```javascript
-game.escalatingEncounters.trigger(ruleId); // Fire a specific trigger rule (for macros)
+// Fire a trigger rule from a macro.
+// Pass this.id as the second argument when the rule uses "Once per macro" mode
+// so the module can track which macro called it.
+game.escalatingEncounters.trigger(ruleId);
+game.escalatingEncounters.trigger(ruleId, this.id); // Once per macro mode
+
 game.escalatingEncounters.advance(tableId, slotId); // Directly advance one slot
-game.escalatingEncounters.openPanel(); // Open the GM panel
+game.escalatingEncounters.openPanel();              // Open the GM panel
 ```
+
+> **Tip — Once per macro**: Set a rule to _Once per macro_ mode, then use the **Copy Command** button in the Trigger Editor — it automatically includes `this.id` as the second argument. Paste the copied command into each macro that should fire the rule. The Trigger Editor's caller audit shows every macro that has fired and lets you reset them individually.
 
 ---
 
