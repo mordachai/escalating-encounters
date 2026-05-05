@@ -8,6 +8,9 @@ This module is free. Wanna do a cool thing?
 
 ![Foundry v13](https://img.shields.io/badge/foundry-v13-green?style=for-the-badge) ![Github All Releases](https://img.shields.io/github/downloads/mordachai/escalating-encounters/total.svg?style=for-the-badge) ![GitHub Release](https://img.shields.io/github/v/release/mordachai/escalating-encounters?display_name=tag&style=for-the-badge&label=Current%20version)
 
+<img width="869" height="748" alt="image" src="https://github.com/user-attachments/assets/6a95b467-0df1-4826-a1ea-92a1dd1cd2a2" />
+
+
 Countless adventures and sourcebooks use the same powerful design pattern: a region feels alive because its random encounters aren't truly random — they _escalate_. Every roll pushes toward something. Wolves become a pack. A distant fire becomes a warband. Drips of tension build until something big finally breaks loose.
 
 **Escalating Encounters** brings that mechanic to Foundry VTT. Define your tables once, wire up a trigger (scene entry, a hook, a macro, a timer — or just a button), and the module handles the rest. Outcomes advance automatically, chat cards go straight to the GM, and everything resets cleanly when the story moves on.
@@ -38,9 +41,15 @@ https://github.com/mordachai/escalating-encounters/releases/latest/download/modu
 
 ### 1. The GM Panel
 
+<img width="306" height="372" alt="image" src="https://github.com/user-attachments/assets/30d2afbb-3f72-429e-a971-45de63436db3" />
+
+
 Access the main panel from the **Token Controls** (the dice icon). From here you can see all your tables, roll random slots, or manually advance and reset them.
 
 ### 2. Creating Tables
+
+<img width="733" height="772" alt="image" src="https://github.com/user-attachments/assets/47598ba5-a14c-4ad2-9faa-d1346be63a04" />
+
 
 In the **Table Editor**, you create **Slots**. Each slot is one sequence of escalating events.
 
@@ -51,6 +60,8 @@ In the **Table Editor**, you create **Slots**. Each slot is one sequence of esca
 > **Tip — using journal pages as outcomes**: Create a journal with one page per escalation stage, then link the relevant page to each slot. When the slot advances, click the link in the chat card to jump straight to that page's description.
 
 ### 3. Wiring Triggers
+
+<img width="666" height="613" alt="image" src="https://github.com/user-attachments/assets/db2f3a0a-2f13-407b-a5b3-60d6ee3f2b94" />
 
 In the **Trigger Editor**, you define when tables should advance:
 
