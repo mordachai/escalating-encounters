@@ -45,20 +45,26 @@
 
     <div class="ee-rule-detail">
 
-      <div class="ee-field ee-field--inline">
+      <div class="ee-field">
         <label>{{localize "EE.TriggerEditor.RuleName"}}</label>
         <input type="text" name="ruleName" value="{{selected.name}}" />
       </div>
 
+      <div class="ee-field">
+        <label>{{localize "EE.TriggerEditor.Slug"}}</label>
+        <input type="text" name="ruleSlug" value="{{selected.slug}}" />
+        <span class="ee-hint">{{localize "EE.TriggerEditor.SlugHint"}}</span>
+      </div>
+
       {{!-- Copy buttons --}}
       <div class="ee-copy-group">
-        <button type="button" class="ee-btn-sm" data-action="copy-id" data-rule-id="{{selected.id}}">
+        <button type="button" class="ee-btn-sm" data-action="copy-id" data-rule-id="{{selected.slug}}">
           {{localize "EE.TriggerEditor.CopyId"}}
         </button>
-        <button type="button" class="ee-btn-sm" data-action="copy-command" data-rule-id="{{selected.id}}">
+        <button type="button" class="ee-btn-sm" data-action="copy-command" data-rule-id="{{selected.slug}}">
           {{localize "EE.TriggerEditor.CopyCommand"}}
         </button>
-        <button type="button" class="ee-btn-sm" data-action="copy-command-async" data-rule-id="{{selected.id}}">
+        <button type="button" class="ee-btn-sm" data-action="copy-command-async" data-rule-id="{{selected.slug}}">
           {{localize "EE.TriggerEditor.CopyCommandAsync"}}
         </button>
       </div>
@@ -140,23 +146,44 @@
       {{/if}}
 
       {{!-- Macro info --}}
+      {{#if selected.isMacro}}
       <div class="ee-macro-info">
-        {{#if (or selected.isMacro (eq selected.type "macroNth"))}}
         <p class="ee-hint">{{localize "EE.TriggerEditor.MacroHowTo"}}</p>
-        <div>
-          <div class="ee-field ee-field--inline">
-            <label>{{localize "EE.TriggerEditor.MacroOnce"}}</label>
-            <input type="checkbox" name="macroOnce" {{#if selected.params.once}}checked{{/if}} />
-            <p class="ee-hint">{{localize "EE.TriggerEditor.MacroOnceHint"}}</p>
-            {{#if selected.firedCount}}
-            <button type="button" class="ee-btn-sm ee-btn-danger" data-action="reset-macro-count" data-rule-id="{{selected.id}}">
-              <i class="fas fa-undo"></i> ({{selected.firedCount}})
-            </button>
-            {{/if}}
-          </div>
+
+        <div class="ee-field">
+          <label>{{localize "EE.TriggerEditor.MacroMode"}}</label>
+          <select name="macroMode">
+            <option value="unlimited"     {{#if selected.macroModeUnlimited}}selected{{/if}}>{{localize "EE.TriggerEditor.MacroModeUnlimited"}}</option>
+            <option value="once"          {{#if selected.macroModeOnce}}selected{{/if}}>{{localize "EE.TriggerEditor.MacroModeOnce"}}</option>
+            <option value="oncePerCaller" {{#if selected.macroModeOncePerCaller}}selected{{/if}}>{{localize "EE.TriggerEditor.MacroModeOncePerCaller"}}</option>
+          </select>
+          {{#if selected.macroModeUnlimited}}
+          <p class="ee-hint">{{localize "EE.TriggerEditor.MacroModeUnlimitedHint"}}</p>
+          {{/if}}
+          {{#if selected.macroModeOnce}}
+          <p class="ee-hint">{{localize "EE.TriggerEditor.MacroModeOnceHint"}}</p>
+          {{/if}}
+          {{#if selected.macroModeOncePerCaller}}
+          <p class="ee-hint">{{localize "EE.TriggerEditor.MacroModeOncePerCallerHint"}}</p>
+          {{/if}}
         </div>
+
+        {{#if selected.macroModeOnce}}
+        {{#if selected.firedCount}}
+        <button type="button" class="ee-btn-sm ee-btn-danger" data-action="reset-macro-count" data-rule-id="{{selected.id}}">
+          <i class="fas fa-undo"></i> {{localize "EE.TriggerEditor.MacroResetCount"}} ({{selected.firedCount}})
+        </button>
         {{/if}}
+        {{/if}}
+
+        {{#if selected.macroModeOncePerCaller}}
+        <button type="button" class="ee-btn-sm" data-action="open-caller-audit" data-rule-id="{{selected.id}}">
+          <i class="fas fa-list"></i> {{localize "EE.TriggerEditor.MacroViewCallers"}} ({{selected.macroCallerCount}})
+        </button>
+        {{/if}}
+
       </div>
+      {{/if}}
 
       {{!-- Timer params --}}
       {{#if selected.isTimer}}

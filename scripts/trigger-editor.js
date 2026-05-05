@@ -3,6 +3,52 @@
   'use strict';
   const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
 
+  function slugify(str) {
+    return str.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'rule';
+  }
+
+  class CallerAuditApp extends HandlebarsApplicationMixin(ApplicationV2) {
+    static DEFAULT_OPTIONS = {
+      classes: ['ee-app', 'ee-caller-audit'],
+      window: { title: 'EE.TriggerEditor.CallerAuditTitle', resizable: true, minimizable: true },
+      position: { width: 460, height: 'auto' },
+      actions: {
+        'reset-all': async function() {
+          await EE.Data.resetCallers(this._ruleId);
+          EE.TriggerEditor._instance?.render();
+          this.render();
+        },
+        'reset-caller': async function(_event, target) {
+          await EE.Data.resetCaller(this._ruleId, target.dataset.callerId);
+          EE.TriggerEditor._instance?.render();
+          this.render();
+        }
+      }
+    };
+
+    static PARTS = {
+      main: { template: 'modules/escalating-encounters/templates/caller-audit.hbs' }
+    };
+
+    constructor(ruleId, options = {}) {
+      super(foundry.utils.mergeObject({ id: `ee-caller-audit-${ruleId}` }, options));
+      this._ruleId = ruleId;
+    }
+
+    async _prepareContext() {
+      const state = EE.Data.getState();
+      const callerIds = state.macroCalled?.[this._ruleId] ?? [];
+      const rule = EE.Data.getTriggers()[this._ruleId];
+      return {
+        ruleName: rule?.name ?? this._ruleId,
+        callers: callerIds.map(id => ({
+          id,
+          name: game.macros.get(id)?.name ?? game.i18n.localize('EE.TriggerEditor.MacroUnknown')
+        }))
+      };
+    }
+  }
+
   class TriggerEditor extends HandlebarsApplicationMixin(ApplicationV2) {
     static DEFAULT_OPTIONS = {
       id: 'ee-trigger-editor',
@@ -17,11 +63,34 @@
         "remove-target": function(event, target) { this._removeTarget(Number(target.dataset.targetIdx)); },
         "add-excluded-scene": function() { this._addExcludedScene(); },
         "remove-excluded-scene": function(event, target) { this._removeExcludedScene(Number(target.dataset.idx)); },
-        "copy-id": function(event, target) { this._copyToClipboard(target.dataset.ruleId); },
-        "copy-command": function(event, target) { this._copyToClipboard(`game.escalatingEncounters.trigger("${target.dataset.ruleId}")`); },
-        "copy-command-async": function(event, target) { this._copyToClipboard(`await game.escalatingEncounters.trigger("${target.dataset.ruleId}")`); },
+        "copy-id": function() {
+          this._syncFromDOM();
+          const rule = this._triggers?.[this._selectedId];
+          if (rule) this._copyToClipboard(rule._pendingSlug ?? rule.id);
+        },
+        "copy-command": function() {
+          this._syncFromDOM();
+          const rule = this._triggers?.[this._selectedId];
+          if (!rule) return;
+          const ruleId = rule._pendingSlug ?? rule.id;
+          const mode = rule.params?.mode ?? (rule.params?.once ? 'once' : 'unlimited');
+          const args = mode === 'oncePerCaller' ? `"${ruleId}", this.id` : `"${ruleId}"`;
+          this._copyToClipboard(`game.escalatingEncounters.trigger(${args})`);
+        },
+        "copy-command-async": function() {
+          this._syncFromDOM();
+          const rule = this._triggers?.[this._selectedId];
+          if (!rule) return;
+          const ruleId = rule._pendingSlug ?? rule.id;
+          const mode = rule.params?.mode ?? (rule.params?.once ? 'once' : 'unlimited');
+          const args = mode === 'oncePerCaller' ? `"${ruleId}", this.id` : `"${ruleId}"`;
+          this._copyToClipboard(`await game.escalatingEncounters.trigger(${args})`);
+        },
         "reset-macro-count": function(event, target) {
           EE.Data.resetMacroCount(target.dataset.ruleId).then(() => this.render());
+        },
+        "open-caller-audit": function(_event, target) {
+          new CallerAuditApp(target.dataset.ruleId).render(true);
         },
         "save": function() { this._save(); }
       }
@@ -35,6 +104,7 @@
 
     _triggers = null;
     _selectedId = null;
+    _slugManual = new Set();
 
     static open() {
       if (!TriggerEditor._instance) TriggerEditor._instance = new TriggerEditor();
@@ -64,9 +134,15 @@
         const type = rule.type ?? 'manual';
         const isSceneType = type === 'sceneFirstVisit' || type === 'sceneEveryVisit';
         const sceneMode = isSceneType ? (rule.params?.sceneMode ?? 'specific') : 'specific';
+        const macroMode = type === 'macroNth'
+          ? (rule.params?.mode ?? (rule.params?.once ? 'once' : 'unlimited'))
+          : 'unlimited';
+        const state = EE.Data.getState();
+        const macroCallerCount = (state.macroCalled?.[rule.id] ?? []).length;
 
         selected = {
           id: rule.id,
+          slug: rule._pendingSlug ?? rule.id,
           name: rule.name,
           type: type,
           params: rule.params ?? {},
@@ -81,7 +157,12 @@
           sceneModeAnyExcept: sceneMode === 'anyExcept',
           excludedScenes: (rule.params?.excludedSceneIds ?? []).map((uuid, idx) => ({ idx, uuid })),
           isMacro: type === 'macroNth',
-          firedCount: EE.Data.getState().macroCounts[rule.id] ?? 0,
+          macroMode,
+          macroModeUnlimited: macroMode === 'unlimited',
+          macroModeOnce: macroMode === 'once',
+          macroModeOncePerCaller: macroMode === 'oncePerCaller',
+          firedCount: state.macroCounts[rule.id] ?? 0,
+          macroCallerCount,
           isHook: type === 'hook',
           isTimer: type === 'timer',
           tableList,
@@ -117,13 +198,24 @@
         this._toggleEnabled(sel.dataset.ruleId, sel.checked);
         return;
       }
+      if (sel.name === 'ruleName') {
+        if (!this._slugManual.has(this._selectedId)) {
+          const slugInput = this.element.querySelector('[name="ruleSlug"]');
+          if (slugInput) slugInput.value = slugify(sel.value);
+        }
+        return;
+      }
+      if (sel.name === 'ruleSlug') {
+        this._slugManual.add(this._selectedId);
+        return;
+      }
       if (sel.name === 'ruleType') {
         this._syncFromDOM();
         this._triggers[this._selectedId].type = sel.value;
         this.render();
         return;
       }
-      if (sel.name === 'sceneMode') {
+      if (sel.name === 'sceneMode' || sel.name === 'macroMode') {
         this._syncFromDOM();
         this.render();
         return;
@@ -164,6 +256,10 @@
 
       rule.name = detail.querySelector('[name="ruleName"]')?.value ?? rule.name;
 
+      const slugVal = detail.querySelector('[name="ruleSlug"]')?.value?.trim();
+      if (slugVal && slugVal !== this._selectedId) rule._pendingSlug = slugVal;
+      else delete rule._pendingSlug;
+
       switch (rule.type) {
         case 'sceneFirstVisit':
         case 'sceneEveryVisit': {
@@ -193,7 +289,7 @@
           break;
         case 'macroNth':
           rule.params = {
-            once: detail.querySelector('[name="macroOnce"]')?.checked ?? false
+            mode: detail.querySelector('[name="macroMode"]')?.value ?? 'unlimited'
           };
           break;
         default:
@@ -209,7 +305,9 @@
 
     _newRule() {
       this._syncFromDOM();
-      const id = foundry.utils.randomID();
+      const base = slugify('new-rule');
+      let id = base, n = 2;
+      while (this._triggers[id]) id = `${base}-${n++}`;
       this._triggers[id] = { id, name: 'New Rule', type: 'manual', params: {}, targets: [] };
       this._selectedId = id;
       this.render();
@@ -228,7 +326,10 @@
       });
       if (!confirmed) return;
       delete this._triggers[ruleId];
+      this._slugManual.delete(ruleId);
       if (this._selectedId === ruleId) this._selectedId = null;
+      await EE.Data.setTriggers(this._triggers);
+      EE.Engine.rewireTriggers();
       this.render();
     }
 
@@ -283,6 +384,47 @@
 
     async _save() {
       this._syncFromDOM();
+
+      // Apply pending slug renames
+      const renames = Object.entries(this._triggers)
+        .filter(([oldId, rule]) => rule._pendingSlug && rule._pendingSlug !== oldId)
+        .map(([oldId, rule]) => ({ oldId, newId: slugify(rule._pendingSlug) }));
+
+      for (const { oldId, newId } of renames) {
+        if (!newId) continue;
+        if (this._triggers[newId] && newId !== oldId) {
+          ui.notifications.error(game.i18n.format('EE.TriggerEditor.SlugConflict', { slug: newId }));
+          return;
+        }
+        const rule = this._triggers[oldId];
+        delete rule._pendingSlug;
+        rule.id = newId;
+        this._triggers[newId] = rule;
+        delete this._triggers[oldId];
+        this._slugManual.delete(oldId);
+        if (this._selectedId === oldId) this._selectedId = newId;
+      }
+
+      // Update macroCounts and macroCalled keys in state for renamed rules
+      if (renames.length) {
+        const state = EE.Data.getState();
+        state.macroCalled ??= {};
+        for (const { oldId, newId } of renames) {
+          if (state.macroCounts?.[oldId] !== undefined) {
+            state.macroCounts[newId] = state.macroCounts[oldId];
+            delete state.macroCounts[oldId];
+          }
+          if (state.macroCalled[oldId] !== undefined) {
+            state.macroCalled[newId] = state.macroCalled[oldId];
+            delete state.macroCalled[oldId];
+          }
+        }
+        await EE.Data.setState(state);
+      }
+
+      // Strip any leftover internal fields before saving
+      for (const rule of Object.values(this._triggers)) delete rule._pendingSlug;
+
       await EE.Data.setTriggers(this._triggers);
       EE.Engine.rewireTriggers();
       ui.notifications.info(game.i18n.localize('EE.TriggerEditor.Saved'));

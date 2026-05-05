@@ -13,14 +13,14 @@
         </button>
         <button type="button"
                 class="ee-btn-sm"
-                data-action="export-csv"
-                title="{{localize 'EE.TableEditor.ExportCSV'}}">
+                data-action="export-json"
+                title="{{localize 'EE.TableEditor.ExportJSON'}}">
           <i class="fas fa-file-export"></i>
         </button>
         <button type="button"
                 class="ee-btn-sm"
-                data-action="import-csv"
-                title="{{localize 'EE.TableEditor.ImportCSV'}}">
+                data-action="import-json"
+                title="{{localize 'EE.TableEditor.ImportJSON'}}">
           <i class="fas fa-file-import"></i>
         </button>
       </div>
@@ -55,7 +55,7 @@
 
     <div class="ee-table-detail">
 
-      <div class="ee-field ee-field--inline">
+      <div class="ee-field">
         <label>{{localize "EE.TableEditor.TableName"}}</label>
         <input type="text" name="tableName" value="{{selected.name}}" />
       </div>

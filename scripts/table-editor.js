@@ -26,8 +26,8 @@
           navigator.clipboard.writeText(`game.escalatingEncounters.advance("${target.dataset.tableId}", "${target.dataset.slotId}")`);
           ui.notifications.info(game.i18n.localize('EE.TriggerEditor.IdCopied'));
         },
-        "export-csv": function() { this._exportCSV(); },
-        "import-csv": function() { this._importCSV(); }
+        "export-json": function() { this._exportJSON(); },
+        "import-json": function() { this._importJSON(); }
       }
     };
 
@@ -293,54 +293,94 @@
       if (soundUuid) EE.Engine.playSound(soundUuid);
     }
 
-    _exportCSV() {
-      const tables = this._tables ?? EE.Data.getTables();
-      const csv = EE.Data.tablesToCSV(tables);
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'escalating-encounters.csv';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+    async _exportJSON() {
+      this._syncFromDOM();
+      const payload = {
+        version: 1,
+        tables: this._tables ?? EE.Data.getTables(),
+        triggers: EE.Data.getTriggers()
+      };
+      const json = JSON.stringify(payload, null, 2);
+
+      if (window.showSaveFilePicker) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: 'escalating-encounters.json',
+            types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }]
+          });
+          const writable = await handle.createWritable();
+          await writable.write(json);
+          await writable.close();
+        } catch (err) {
+          if (err.name !== 'AbortError') console.error('EE | Export failed:', err);
+        }
+      } else {
+        const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'escalating-encounters.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
     }
 
-    async _importCSV() {
+    async _importJSON() {
       const input = document.createElement('input');
       input.type = 'file';
-      input.accept = '.csv,text/csv,text/plain';
+      input.accept = '.json,application/json';
       input.addEventListener('change', async () => {
         const file = input.files[0];
         if (!file) return;
-        const text = await file.text();
-        const imported = EE.Data.tablesFromCSV(text);
-        const count = Object.keys(imported).length;
-        if (!count) {
+        let payload;
+        try { payload = JSON.parse(await file.text()); }
+        catch { ui.notifications.error(game.i18n.localize('EE.TableEditor.ImportInvalid')); return; }
+
+        const tables = payload.tables ?? {};
+        const triggers = payload.triggers ?? {};
+        const tableCount = Object.keys(tables).length;
+        const triggerCount = Object.keys(triggers).length;
+
+        if (!tableCount && !triggerCount) {
           ui.notifications.warn(game.i18n.localize('EE.TableEditor.ImportEmpty'));
           return;
         }
-        const names = Object.values(imported).map(t => `<li>${t.name}</li>`).join('');
+
+        const tableNames = Object.values(tables).map(t => `<li>${t.name}</li>`).join('');
+        const triggerNames = Object.values(triggers).map(r => `<li>${r.name}</li>`).join('');
         const confirmed = await DialogV2.confirm({
-          content: `<p>${game.i18n.format('EE.TableEditor.ImportConfirm', { count })}</p><ul>${names}</ul>`,
+          content: `<p>${game.i18n.format('EE.TableEditor.ImportConfirm', { tables: tableCount, triggers: triggerCount })}</p>
+            ${tableNames ? `<ul>${tableNames}</ul>` : ''}
+            ${triggerNames ? `<ul>${triggerNames}</ul>` : ''}`,
           rejectClose: false, modal: true
         });
         if (!confirmed) return;
 
-        this._tables = imported;
+        this._tables = tables;
         this._selectedId = null;
-        await EE.Data.setTables(imported);
+        await EE.Data.setTables(tables);
+        await EE.Data.setTriggers(triggers);
 
         // Prune orphaned state
         const state = EE.Data.getState();
         for (const tid of Object.keys(state.tables)) {
-          if (!imported[tid]) delete state.tables[tid];
+          if (!tables[tid]) delete state.tables[tid];
+        }
+        for (const rid of Object.keys(state.macroCounts ?? {})) {
+          if (!triggers[rid]) delete state.macroCounts[rid];
         }
         await EE.Data.setState(state);
 
-        ui.notifications.info(game.i18n.format('EE.TableEditor.ImportDone', { count }));
+        EE.Engine.rewireTriggers();
+        if (EE.TriggerEditor._instance?.rendered) {
+          EE.TriggerEditor._instance._triggers = null;
+          EE.TriggerEditor._instance._selectedId = null;
+          EE.TriggerEditor._instance.render();
+        }
         if (EE.Panel._instance?.rendered) EE.Panel._instance.render();
+        ui.notifications.info(game.i18n.format('EE.TableEditor.ImportDone', { tables: tableCount, triggers: triggerCount }));
         this.render();
       });
       input.click();

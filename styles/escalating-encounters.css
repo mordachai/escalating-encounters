@@ -740,6 +740,58 @@
   box-sizing: border-box;
 }
 
+/* Caller audit dialog */
+.ee-caller-audit .window-content {
+  padding: 10px 12px;
+}
+.ee-caller-audit-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ee-caller-audit-toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+.ee-caller-dialog-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ee-caller-dialog-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  background: var(--ee-subtle-bg);
+  border: var(--ee-border);
+  border-radius: var(--ee-radius);
+}
+.ee-caller-dialog-info {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+}
+.ee-caller-name {
+  font-weight: bold;
+  font-size: 0.9em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.ee-caller-id {
+  font-size: 0.75em;
+  color: var(--color-form-hint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Timer params */
 .ee-timer-params {
   margin-bottom: 8px;

@@ -9,7 +9,7 @@
       id: 'ee-panel',
       classes: ['ee-app', 'ee-panel'],
       window: { title: 'EE.Panel.Title', resizable: true, minimizable: true },
-      position: { width: 400, height: 560 },
+      position: { width: 400, height: 580 },
       actions: {
         'select-table': function (event, target) {
           this._activeTableId = target.dataset.tableId;
@@ -187,14 +187,9 @@
       this.render();
     }
 
-    _doAdvanceSlot(tableId, slotId) {
-      const result = EE.Data.advanceSlot(tableId, slotId);
-      if (result) {
-        this._lastResult = result;
-        if (result.outcome?.soundUuid)
-          EE.Engine.playSound(result.outcome.soundUuid);
-        Hooks.callAll('ee.stateChanged');
-      }
+    async _doAdvanceSlot(tableId, slotId) {
+      const results = await EE.Engine.fireTargets([{ tableId, slotId }]);
+      if (results.length) this._lastResult = results[0];
       this.render();
     }
 

@@ -1,0 +1,30 @@
+<div class="ee-caller-audit-dialog">
+  <p class="ee-hint">{{localize "EE.TriggerEditor.CallerAuditHint"}} <strong>{{ruleName}}</strong></p>
+
+  {{#if callers.length}}
+  <div class="ee-caller-audit-toolbar">
+    <button type="button" class="ee-btn-sm ee-btn-danger" data-action="reset-all">
+      <i class="fas fa-undo"></i> {{localize "EE.TriggerEditor.MacroResetAllCallers"}}
+    </button>
+  </div>
+  <ul class="ee-caller-dialog-list">
+    {{#each callers}}
+    <li class="ee-caller-dialog-row">
+      <div class="ee-caller-dialog-info">
+        <span class="ee-caller-name">{{this.name}}</span>
+        <code class="ee-caller-id">{{this.id}}</code>
+      </div>
+      <button type="button"
+              class="ee-btn-icon ee-btn-danger"
+              data-action="reset-caller"
+              data-caller-id="{{this.id}}"
+              title="{{localize 'EE.TriggerEditor.MacroResetCaller'}}">
+        <i class="fas fa-times"></i>
+      </button>
+    </li>
+    {{/each}}
+  </ul>
+  {{else}}
+  <p class="ee-hint">{{localize "EE.TriggerEditor.MacroNoCallers"}}</p>
+  {{/if}}
+</div>

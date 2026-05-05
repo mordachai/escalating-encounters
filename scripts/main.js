@@ -18,7 +18,7 @@
     });
 
     game.escalatingEncounters = {
-      trigger(ruleId) {
+      trigger(ruleId, callerId) {
         if (!game.user.isGM) return Promise.resolve([]);
         const rule = EE.Data.getTriggers()[ruleId];
         if (!rule) {
@@ -26,19 +26,36 @@
           return Promise.resolve([]);
         }
         if (rule.enabled === false) return Promise.resolve([]);
-        const state = EE.Data.getState();
-        const count = state.macroCounts[ruleId] ?? 0;
-        if (rule.params?.once && count >= 1) return Promise.resolve([]);
 
-        state.macroCounts[ruleId] = count + 1;
-        EE.Data.setState(state);
+        const mode = rule.params?.mode ?? (rule.params?.once ? 'once' : 'unlimited');
+        const state = EE.Data.getState();
+        state.macroCalled ??= {};
+
+        if (mode === 'once') {
+          const count = state.macroCounts[ruleId] ?? 0;
+          if (count >= 1) return Promise.resolve([]);
+          state.macroCounts[ruleId] = count + 1;
+          EE.Data.setState(state);
+        } else if (mode === 'oncePerCaller') {
+          if (!callerId) {
+            console.warn(`EE | trigger("${ruleId}") called in oncePerCaller mode without a callerId — firing anyway`);
+          } else {
+            const called = state.macroCalled[ruleId] ?? [];
+            if (called.includes(String(callerId))) return Promise.resolve([]);
+            state.macroCalled[ruleId] = [...called, String(callerId)];
+            EE.Data.setState(state);
+          }
+        } else {
+          const count = state.macroCounts[ruleId] ?? 0;
+          state.macroCounts[ruleId] = count + 1;
+          EE.Data.setState(state);
+        }
+
         return EE.Engine.fireTargets(rule.targets ?? []);
       },
       advance(tableId, slotId) {
-        if (!game.user.isGM) return null;
-        const result = EE.Data.advanceSlot(tableId, slotId);
-        if (result) Hooks.callAll('ee.stateChanged');
-        return result;
+        if (!game.user.isGM) return Promise.resolve([]);
+        return EE.Engine.fireTargets([{ tableId, slotId }]);
       },
       openPanel() {
         return EE.Panel.open();
