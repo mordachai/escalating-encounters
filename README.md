@@ -10,10 +10,9 @@ This module is free. Wanna do a cool thing?
 
 <img width="869" height="748" alt="image" src="https://github.com/user-attachments/assets/6a95b467-0df1-4826-a1ea-92a1dd1cd2a2" />
 
+Lots adventures and sourcebooks use the "random escalating encounter" to make the game feel more alive and remove some of the burden for the GM. So I decided to build a tool for creating and running such encounter: easy to set, implement it and you're free to focus on all other parts of your adventure.
 
-Countless adventures and sourcebooks use the same powerful design pattern: a region feels alive because its random encounters aren't truly random — they _escalate_. Every roll pushes toward something. Wolves become a pack. A distant fire becomes a warband. Drips of tension build until something big finally breaks loose.
-
-**Escalating Encounters** brings that mechanic to Foundry VTT. Define your tables once, wire up a trigger (scene entry, a hook, a macro, a timer — or just a button), and the module handles the rest. Outcomes advance automatically, chat cards go straight to the GM, and everything resets cleanly when the story moves on.
+I've made this module to run the awesome **[The Castle, The Count & the Curse](https://www.drivethrurpg.com/en/product/458350/the-count-the-castle-the-curse)** from [**_Deficient Master_**](https://www.youtube.com/watch?v=hNNTk2Rbljo) (image above), and the module pretty much automated the hell out of it. Its system agnostic, so you can use with any system or adventure. Go check it out!
 
 ## Features
 
