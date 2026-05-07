@@ -69,7 +69,7 @@
       if (!EncounterPanel._instance)
         EncounterPanel._instance = new EncounterPanel();
       const inst = EncounterPanel._instance;
-      if (inst.rendered) inst.bringToTop();
+      if (inst.rendered) inst.bringToFront();
       else inst.render(true);
       return inst;
     }

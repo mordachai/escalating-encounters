@@ -45,7 +45,7 @@
     static open() {
       if (!TableEditor._instance) TableEditor._instance = new TableEditor();
       const inst = TableEditor._instance;
-      if (inst.rendered) inst.bringToTop();
+      if (inst.rendered) inst.bringToFront();
       else inst.render(true);
       return inst;
     }
