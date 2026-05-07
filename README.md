@@ -28,6 +28,10 @@ I've made this module to run the awesome **[The Castle, The Count & the Curse](h
 
 ## Installation
 
+Search for _"escalating encounters"_ in Add-on Modules install seach bar 
+
+OR
+
 Paste the following manifest URL in the **Install Module** dialog:
 
 ```
