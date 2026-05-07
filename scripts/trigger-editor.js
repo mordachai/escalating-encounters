@@ -109,7 +109,7 @@
     static open() {
       if (!TriggerEditor._instance) TriggerEditor._instance = new TriggerEditor();
       const inst = TriggerEditor._instance;
-      if (inst.rendered) inst.bringToTop();
+      if (inst.rendered) inst.bringToFront();
       else inst.render(true);
       return inst;
     }
