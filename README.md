@@ -6,7 +6,7 @@ This module is free. Wanna do a cool thing?
 
 # Escalating Encounters
 
-![Foundry v13](https://img.shields.io/badge/foundry-v13-green?style=for-the-badge) ![Github All Releases](https://img.shields.io/github/downloads/mordachai/escalating-encounters/total.svg?style=for-the-badge) ![GitHub Release](https://img.shields.io/github/v/release/mordachai/escalating-encounters?display_name=tag&style=for-the-badge&label=Current%20version)
+![Foundry v13](https://img.shields.io/badge/foundry-v13-green?style=for-the-badge) ![Foundry v14](https://img.shields.io/badge/foundry-v14-blue?style=for-the-badge)  ![Github All Releases](https://img.shields.io/github/downloads/mordachai/escalating-encounters/total.svg?style=for-the-badge) ![GitHub Release](https://img.shields.io/github/v/release/mordachai/escalating-encounters?display_name=tag&style=for-the-badge&label=Current%20version)
 
 <img width="869" height="748" alt="image" src="https://github.com/user-attachments/assets/6a95b467-0df1-4826-a1ea-92a1dd1cd2a2" />
 
