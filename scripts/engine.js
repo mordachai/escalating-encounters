@@ -27,7 +27,7 @@
       const content = `<div class="ee-chat-card">
         <div class="ee-chat-header">
           ${img}
-          <div class="ee-chat-title-row">
+          <div class="ee-chat-title-col">
             <strong class="ee-chat-slot-label">${slot.label}</strong>
             <span class="ee-chat-outcome-num">${game.i18n.format('EE.Chat.OutcomeOfTotal', { n: count, total })}</span>
           </div>
