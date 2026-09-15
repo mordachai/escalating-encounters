@@ -3,6 +3,10 @@
   'use strict';
   const M = 'escalating-encounters';
 
+  function applyTheme() {
+    document.body.dataset.eeTheme = game.settings.get(M, 'ee-theme');
+  }
+
   Hooks.once('init', function () {
     window.EE ??= {};
 
@@ -16,6 +20,21 @@
       scope: 'world', config: false, type: Object,
       default: { tables: {}, scenesSeen: [], macroCounts: {} }
     });
+    game.settings.register(M, 'ee-theme', {
+      name: 'EE.Settings.Theme.Name',
+      hint: 'EE.Settings.Theme.Hint',
+      scope: 'world',
+      config: true,
+      type: String,
+      choices: {
+        bloody: 'EE.Settings.Theme.Bloody',
+        scifi: 'EE.Settings.Theme.SciFi',
+        oldtimes: 'EE.Settings.Theme.OldTimes'
+      },
+      default: 'bloody',
+      onChange: applyTheme
+    });
+    applyTheme();
 
     game.escalatingEncounters = {
       trigger(ruleId, callerId) {

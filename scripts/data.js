@@ -23,7 +23,7 @@
     if (ss.count < max) ss.count++;
 
     setState(state);
-    return { slot, outcome: slot.outcomes[ss.count - 1] ?? null, count: ss.count };
+    return { slot, outcome: slot.outcomes[ss.count - 1] ?? null, count: ss.count, total: max };
   }
 
   function resetSlot(tableId, slotId) {

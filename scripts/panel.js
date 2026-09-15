@@ -152,7 +152,7 @@
 
       let lastResult = null;
       if (this._lastResult) {
-        const { slot, outcome, count } = this._lastResult;
+        const { slot, outcome, count, total } = this._lastResult;
         const enriched = outcome?.text
           ? await TextEditor.enrichHTML(outcome.text)
           : '';
@@ -167,6 +167,7 @@
         lastResult = {
           slotLabel: slot.label,
           count,
+          total,
           enriched,
           actorImg: actor?.img ?? null,
           actorUuid: slot.actorUuid ?? null,

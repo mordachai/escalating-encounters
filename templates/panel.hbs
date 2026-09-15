@@ -49,7 +49,7 @@
         {{/if}}
         <div class="ee-result-meta">
           <strong>{{lastResult.slotLabel}}</strong>
-          <em>{{localize "EE.Chat.Outcome"}} {{lastResult.count}}</em>
+          <em>{{localize "EE.Chat.OutcomeOfTotal" n=lastResult.count total=lastResult.total}}</em>
         </div>
       </div>
       {{#if lastResult.enriched}}

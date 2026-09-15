@@ -1,14 +1,39 @@
 /* escalating-encounters.css — all rules scoped under .ee-app */
 
+/* ── Theme palettes — applied via body[data-ee-theme], set from the module's
+   "Color Theme" setting. Read by both .ee-app (panel/editors) and
+   .ee-chat-card (chat log, outside .ee-app) since body is a shared ancestor. ── */
+body[data-ee-theme='bloody'] {
+  --ee-t-accent: #b3272d;
+  --ee-t-accent-strong: #7a1015;
+  --ee-t-surface: rgba(179, 39, 45, 0.08);
+  --ee-t-surface-strong: rgba(179, 39, 45, 0.16);
+  --ee-t-border: rgba(179, 39, 45, 0.5);
+}
+body[data-ee-theme='scifi'] {
+  --ee-t-accent: #00e5ff;
+  --ee-t-accent-strong: #ff2fd0;
+  --ee-t-surface: rgba(0, 229, 255, 0.08);
+  --ee-t-surface-strong: rgba(255, 47, 208, 0.14);
+  --ee-t-border: rgba(0, 229, 255, 0.5);
+}
+body[data-ee-theme='oldtimes'] {
+  --ee-t-accent: #8a6a3c;
+  --ee-t-accent-strong: #5c4324;
+  --ee-t-surface: rgba(196, 164, 108, 0.14);
+  --ee-t-surface-strong: rgba(196, 164, 108, 0.24);
+  --ee-t-border: rgba(138, 106, 60, 0.55);
+}
+
 /* ── Shared tokens ── */
 .ee-app {
   --ee-gap: 6px;
   --ee-radius: 4px;
-  --ee-border: 1px solid var(--color-border);
+  --ee-border: 1px solid var(--ee-t-border, var(--color-border));
   --ee-slot-height: 64px;
   --ee-pip-size: 10px;
-  --ee-subtle-bg: rgba(0, 0, 0, 0.06);
-  --ee-muted-bg: rgba(0, 0, 0, 0.1);
+  --ee-subtle-bg: var(--ee-t-surface, rgba(0, 0, 0, 0.06));
+  --ee-muted-bg: var(--ee-t-surface-strong, rgba(0, 0, 0, 0.1));
   font-family: var(--font-primary);
   font-size: var(--font-size-14);
 }
@@ -19,7 +44,7 @@
 }
 
 .ee-btn-primary {
-  background: var(--color-warm-1);
+  background: var(--ee-t-accent, var(--color-warm-1));
   color: #fff;
   border: none;
   border-radius: var(--ee-radius);
@@ -247,8 +272,8 @@
   display: inline-block;
 }
 .ee-pip.done {
-  background: var(--color-warm-1);
-  border-color: var(--color-warm-1);
+  background: var(--ee-t-accent, var(--color-warm-1));
+  border-color: var(--ee-t-accent, var(--color-warm-1));
 }
 .ee-slot-count {
   font-size: 0.75em;
@@ -281,7 +306,7 @@
 .ee-last-result {
   border-top: 2px solid;
   border-bottom: 2px solid;
-  border-image: linear-gradient(to right, #00f2fe15, #00f2fe, #00f1fe15) 1;
+  border-image: linear-gradient(to right, transparent, var(--ee-t-accent, #c22b2b), transparent) 1;
   border-radius: 0;
   padding: 10px 20px;
   flex-shrink: 0;
@@ -510,7 +535,7 @@
   font-size: 0.85em;
 }
 .ee-doc-link-display:hover {
-  border-color: var(--color-warm-1);
+  border-color: var(--ee-t-accent, var(--color-warm-1));
 }
 .ee-clear-uuid {
   flex-shrink: 0;
@@ -524,7 +549,7 @@
 }
 .ee-uuid-input:focus,
 .ee-uuid-input.dragover {
-  outline: 2px solid var(--color-warm-1);
+  outline: 2px solid var(--ee-t-accent, var(--color-warm-1));
 }
 
 /* ── Section headers ── */
@@ -804,31 +829,55 @@
 /* ── Chat card ── */
 .ee-chat-card {
   display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  background: var(--ee-t-surface, rgba(0, 0, 0, 0.04));
+  border: 1px solid var(--ee-t-border, var(--color-border));
+  border-left: 3px solid var(--ee-t-accent, var(--color-warm-1));
+  border-radius: 4px;
+}
+.ee-chat-header {
+  display: flex;
+  align-items: center;
   gap: 8px;
-  align-items: flex-start;
-  padding: 4px;
 }
 .ee-chat-portrait {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   object-fit: cover;
   border-radius: 3px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--ee-t-border, var(--color-border));
   flex-shrink: 0;
 }
-.ee-chat-body {
+.ee-chat-title-row {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
 }
 .ee-chat-slot-label {
-  display: block;
   font-weight: bold;
+  color: var(--ee-t-accent, var(--color-text-primary));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .ee-chat-outcome-num {
-  display: block;
-  font-size: 0.85em;
+  font-size: 0.8em;
   color: var(--color-form-hint);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .ee-chat-text {
-  margin-top: 4px;
   font-size: 0.9em;
+  line-height: 1.4;
+}
+.ee-chat-journal {
+  font-size: 0.85em;
+}
+body[data-ee-theme='scifi'] .ee-chat-card {
+  box-shadow: 0 0 8px var(--ee-t-accent);
 }

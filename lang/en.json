@@ -89,8 +89,14 @@
   "EE.TriggerEditor.IdCopied": "Rule ID copied to clipboard.",
 
   "EE.Chat.Triggered": "Escalating Encounter",
-  "EE.Chat.Outcome": "Outcome {n}",
+  "EE.Chat.OutcomeOfTotal": "Outcome {n}/{total}",
   "EE.Notify.SceneFired": "Escalating encounter triggered: {name}",
   "EE.Notify.HookFired": "Escalating encounter triggered by hook: {name}",
-  "EE.Notify.TimerFired": "Escalating encounter timer fired: {name}"
+  "EE.Notify.TimerFired": "Escalating encounter timer fired: {name}",
+
+  "EE.Settings.Theme.Name": "Color Theme",
+  "EE.Settings.Theme.Hint": "Choose the color scheme used by the GM panel and encounter chat cards.",
+  "EE.Settings.Theme.Bloody": "Bloody",
+  "EE.Settings.Theme.SciFi": "Sci-Fi",
+  "EE.Settings.Theme.OldTimes": "Old Times"
 }

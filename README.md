@@ -22,7 +22,8 @@ I've made this module to run the awesome **[The Castle, The Count & the Curse](h
 - **Journal Links**: Link a Journal Entry or a specific Journal Page to a slot. Every time that slot fires, the chat card shows a clickable link that opens the journal directly to that page.
 - **Rich Editors**: Build your tables and triggers with ease. Drag and drop Actors, Journals, and Sounds directly from the sidebar.
 - **JSON Import/Export**: Back up or share your tables and triggers as a JSON file. Export opens a native Save As dialog so you choose where the file lands.
-- **Chat Integration**: Automatically whispers the outcome to the GM — enriched HTML text, actor portrait, and journal link all in one card.
+- **Chat Integration**: Automatically whispers the outcome to the GM — enriched HTML text, actor portrait, and journal link all in one card, with a clear "Outcome X/Y" progress indicator.
+- **Color Themes**: Pick **Bloody**, **Sci-Fi**, or **Old Times** from the module settings to reskin the GM Panel and chat cards to match your table's tone.
 
 ---
 

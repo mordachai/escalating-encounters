@@ -15,7 +15,7 @@
   }
 
   async function postChatCard(results) {
-    for (const { slot, outcome, count } of results) {
+    for (const { slot, outcome, count, total } of results) {
       const enriched = outcome?.text ? await TextEditor.enrichHTML(outcome.text) : '';
       const actor = slot.actorUuid ? await fromUuid(slot.actorUuid).catch(() => null) : null;
       const journalLink = slot.journalUuid
@@ -25,13 +25,15 @@
         ? `<img src="${actor.img}" class="ee-chat-portrait" alt="" />`
         : '';
       const content = `<div class="ee-chat-card">
-        ${img}
-        <div class="ee-chat-body">
-          <strong class="ee-chat-slot-label">${slot.label}</strong>
-          <em class="ee-chat-outcome-num">${game.i18n.format('EE.Chat.Outcome', { n: count })}</em>
-          ${enriched ? `<div class="ee-chat-text">${enriched}</div>` : ''}
-          ${journalLink ? `<div class="ee-chat-journal">${journalLink}</div>` : ''}
+        <div class="ee-chat-header">
+          ${img}
+          <div class="ee-chat-title-row">
+            <strong class="ee-chat-slot-label">${slot.label}</strong>
+            <span class="ee-chat-outcome-num">${game.i18n.format('EE.Chat.OutcomeOfTotal', { n: count, total })}</span>
+          </div>
         </div>
+        ${enriched ? `<div class="ee-chat-text">${enriched}</div>` : ''}
+        ${journalLink ? `<div class="ee-chat-journal">${journalLink}</div>` : ''}
       </div>`;
       await ChatMessage.create({
         content,
